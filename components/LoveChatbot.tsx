@@ -252,11 +252,11 @@ export default function LoveChatbot() {
                 initial={{ opacity: 0, x: 20, scale: 0.9 }}
                 animate={{ opacity: 1, x: 0, scale: 1 }}
                 exit={{ opacity: 0, x: 20, scale: 0.9 }}
-                className="bg-white/95 backdrop-blur-md px-5 py-3 rounded-[24px] rounded-br-[4px] shadow-2xl border relative flex-shrink-0"
+                className="glass-strong backdrop-blur-md px-5 py-3 rounded-[24px] rounded-br-[4px] shadow-2xl border relative flex-shrink-0"
                 onClick={() => setOpen(true)}
-                style={{ cursor: "pointer", borderColor: "var(--border-glass-strong)", boxShadow: "0 10px 40px rgba(0, 0, 0, 0.1)" }}>
+                style={{ cursor: "pointer", background: "var(--primary-blush)", borderColor: "var(--border-glass-strong)", boxShadow: "0 10px 40px rgba(0, 0, 0, 0.1)" }}>
                 <p className="text-[13px] font-bold whitespace-nowrap" style={{ color: "var(--primary)" }}>{nudge}</p>
-                <div className="absolute top-1/2 -translate-y-1/2 -right-2 w-3 h-3 bg-white/95 border-r border-t rotate-45" style={{ borderColor: "var(--border-glass-strong)" }} />
+                <div className="absolute top-1/2 -translate-y-1/2 -right-2 w-3 h-3 border-r border-t rotate-45" style={{ background: "var(--primary-blush)", borderColor: "var(--border-glass-strong)" }} />
               </motion.div>
             )}
           </AnimatePresence>
@@ -266,8 +266,8 @@ export default function LoveChatbot() {
             onClick={() => setOpen(!open)}
             className={`w-14 h-14 rounded-[22px] flex items-center justify-center transition-all hover:scale-110 active:scale-95 shadow-2xl border border-white/20 group relative flex-shrink-0 ${open ? "bg-white rotate-90" : ""}`}
             style={{
-              background: open ? "white" : "var(--primary)",
-              boxShadow: open ? "0 10px 30px rgba(0,0,0,0.1)" : "0 10px 30px rgba(var(--primary-rgb), 0.3)"
+              background: open ? "var(--bg-glass-strong)" : "var(--primary)",
+              boxShadow: open ? "0 10px 30px rgba(0,0,0,0.1)" : "0 10px 30px rgba(var(--primary-rgb), 0.3)" 
             }}>
             {open ? (
               <X className="w-6 h-6" style={{ color: "var(--primary)" }} />
@@ -288,13 +288,13 @@ export default function LoveChatbot() {
             initial={{ opacity: 0, scale: 0.9, y: 50, x: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0, x: 0 }}
             exit={{ opacity: 0, scale: 0.9, y: 50, x: 20 }}
-            className="fixed bottom-24 right-6 z-[60] w-[90vw] sm:w-[400px] h-[75vh] sm:h-[600px] glass-strong rounded-[40px] shadow-[0_20px_60px_rgba(0,0,0,0.15)] border overflow-hidden flex flex-col bg-white"
-            style={{ borderColor: "var(--border-glass-strong)" }}>
+            className="fixed bottom-24 right-6 z-[60] w-[90vw] sm:w-[400px] h-[75vh] sm:h-[600px] glass-strong rounded-[40px] shadow-[0_20px_60px_rgba(0,0,0,0.15)] border overflow-hidden flex flex-col"
+            style={{ background: "var(--bg-glass-strong)", borderColor: "var(--border-glass-strong)" }}>
 
             {/* Header */}
             <div className="p-6 border-b flex items-center justify-between" style={{ background: "var(--primary-blush)", borderColor: "var(--border-glass)" }}>
               <div className="flex items-center gap-3">
-                <div className="w-12 h-12 rounded-2xl bg-white flex items-center justify-center shadow-sm">
+                <div className="w-12 h-12 rounded-2xl flex items-center justify-center shadow-sm" style={{ background: "var(--bg-glass-strong)" }}>
                   <Heart className="w-6 h-6 text-rose-500 fill-rose-500 animate-pulse" />
                 </div>
                 <div>
@@ -374,17 +374,29 @@ export default function LoveChatbot() {
                       <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} key={m.id} className={`flex gap-3 ${m.role === "user" ? "justify-end" : "justify-start"}`}>
                         {m.role === "assistant" && <div className="w-9 h-9 rounded-2xl flex-shrink-0 flex items-center justify-center text-sm shadow-sm mt-1 border" style={{ background: "var(--primary-blush)", borderColor: "var(--border-glass)" }}>💕</div>}
                         <div className="max-w-[85%]">
-                          <div className={`px-5 py-3.5 rounded-[24px] text-sm leading-relaxed shadow-sm ${m.role === "user" ? "rounded-tr-[4px] font-medium" : "rounded-tl-[4px] border border-rose-100 bg-white"}`}
-                            style={m.role === "user" ? { background: "var(--primary)", color: "#fff" } : { color: "var(--primary-deep)" }}>
+                          <div className={`px-5 py-3.5 rounded-[24px] text-sm leading-relaxed shadow-sm ${m.role === "user" ? "rounded-tr-[4px] font-medium" : "rounded-tl-[4px] border"}`}
+                            style={m.role === "user" ? { background: "var(--primary)", color: "#fff" } : { background: "var(--primary-blush)", color: "var(--primary-deep)", borderColor: "var(--border-glass)" }}>
                             {m.content || <div className="flex gap-1.5 items-center h-5">{[0, 1, 2].map((i) => <span key={i} className="w-1.5 h-1.5 rounded-full animate-bounce" style={{ background: "var(--primary-soft)", animationDelay: `${i * 0.15}s` }} />)}</div>}
                           </div>
                           <p className={`text-[9px] font-black uppercase tracking-widest opacity-30 mt-2 ${m.role === "user" ? "text-right" : ""}`} style={{ color: "var(--text-muted)" }}>{fmt(m.ts)}</p>
                         </div>
                       </motion.div>
                     ))}
+                    {busy && !typing && (
+                      <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="flex gap-3 justify-start">
+                        <div className="w-9 h-9 rounded-2xl flex-shrink-0 flex items-center justify-center text-sm shadow-sm mt-1 border" style={{ background: "var(--primary-blush)", borderColor: "var(--border-glass)" }}>💕</div>
+                        <div className="max-w-[85%]">
+                          <div className="px-5 py-3.5 rounded-[24px] rounded-tl-[4px] border border-rose-100 bg-white" style={{ background: "var(--primary-blush)", color: "var(--primary-deep)", borderColor: "var(--border-glass)" }}>
+                            <div className="flex gap-1.5 items-center h-5">
+                              {[0, 1, 2].map((i) => <span key={i} className="w-1.5 h-1.5 rounded-full animate-bounce" style={{ background: "var(--primary-soft)", animationDelay: `${i * 0.15}s` }} />)}
+                            </div>
+                          </div>
+                        </div>
+                      </motion.div>
+                    )}
                     <div ref={endRef} />
                   </div>
-                  <div className="px-6 py-5 flex flex-col gap-4 border-t bg-white" style={{ borderColor: "var(--border-glass)" }}>
+                  <div className="px-6 py-5 flex flex-col gap-4 border-t" style={{ background: "var(--primary-blush)", borderColor: "var(--border-glass)" }}>
                     <div className="flex gap-2 overflow-x-auto pb-1" style={{ scrollbarWidth: "none" }}>
                       {QUICK.map((q) => <button key={q} onClick={() => send(q)} disabled={busy || typing} className="flex-shrink-0 text-[9px] font-black uppercase tracking-widest px-4 py-2 rounded-xl transition-all hover:scale-105 active:scale-95 glass border disabled:opacity-30" style={{ borderColor: "var(--border-glass)", color: "var(--primary)" }}>{q}</button>)}
                     </div>
