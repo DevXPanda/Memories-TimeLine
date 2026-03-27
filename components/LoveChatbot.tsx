@@ -144,7 +144,7 @@ export default function LoveChatbot() {
   useEffect(() => {
     if (!userId) return;
     const timer = setTimeout(() => {
-      const texts = ["Heyy! I Miss You ❤️", "Kuch share karna hai? ✨", "Yaha aao na... 👇"];
+      const texts = ["Heyy! What's Up ❤️", "Kuch share karna hai? ✨", "Yaha aao na... 👉"];
       setNudge(texts[Math.floor(Math.random() * texts.length)]);
     }, 5000);
     return () => clearTimeout(timer);
@@ -267,7 +267,7 @@ export default function LoveChatbot() {
             className={`w-14 h-14 rounded-[22px] flex items-center justify-center transition-all hover:scale-110 active:scale-95 shadow-2xl border border-white/20 group relative flex-shrink-0 ${open ? "bg-white rotate-90" : ""}`}
             style={{
               background: open ? "var(--bg-glass-strong)" : "var(--primary)",
-              boxShadow: open ? "0 10px 30px rgba(0,0,0,0.1)" : "0 10px 30px rgba(var(--primary-rgb), 0.3)" 
+              boxShadow: open ? "0 10px 30px rgba(0,0,0,0.1)" : "0 10px 30px rgba(var(--primary-rgb), 0.3)"
             }}>
             {open ? (
               <X className="w-6 h-6" style={{ color: "var(--primary)" }} />
