@@ -57,6 +57,7 @@ export default function LoveChatbot() {
   const siteUrl = process.env.NEXT_PUBLIC_CONVEX_SITE_URL ?? "";
 
   const typeIn = useCallback((full: string) => {
+    if (!full) { setBusy(false); return; }
     setBusy(true);
     setTyping(true);
     let i = 0;
@@ -161,7 +162,7 @@ export default function LoveChatbot() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          msg: content,
+          message: content,
           history: msgs.slice(-10),
           userName: settings.userName || "jaan",
           partnerName: settings.partnerName || "partner",
@@ -169,7 +170,7 @@ export default function LoveChatbot() {
       });
       const data = await response.json();
       if (data.error) throw new Error(data.error);
-      typeIn(data.response);
+      typeIn(data.reply);
     } catch {
       setBusy(false);
       typeIn("Oh no, network nakhre kar raha hai... 🥺 Ek baar check karoge please?");
