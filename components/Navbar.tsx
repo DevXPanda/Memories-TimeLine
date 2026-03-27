@@ -4,31 +4,35 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { 
   Heart, Home, Clock, Plus, LogOut, Search, User, Menu, X, 
-  ChevronRight, Sparkles, Palette 
+  ChevronRight, Sparkles, Palette, ChevronDown, Users
 } from "lucide-react";
 import { useAuth } from "./AuthProvider";
 import ThemeSwitcher from "./ThemeSwitcher";
 import { motion, AnimatePresence } from "framer-motion";
 
 const NAV = [
-  { href: "/",          label: "Home",     icon: Home  },
-  { href: "/timeline",  label: "Timeline", icon: Clock },
+  { href: "/",          label: "Home",     icon: Home     },
+  { href: "/timeline",  label: "Timeline", icon: Clock    },
+  { href: "/friends",   label: "Friends",  icon: Users    },
 ];
 
 export default function Navbar() {
   const pathname = usePathname();
   const router = useRouter();
-  const { logout, userId, openLogin } = useAuth();
+  const { logout, userId, email, openLogin } = useAuth();
   
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [q, setQ] = useState("");
   const menuRef = useRef<HTMLDivElement>(null);
+  const profileRef = useRef<HTMLDivElement>(null);
 
   // Close menus on route change
   useEffect(() => {
     setIsMenuOpen(false);
     setIsSearchOpen(false);
+    setIsProfileOpen(false);
   }, [pathname]);
 
   // Click outside listener
@@ -37,10 +41,13 @@ export default function Navbar() {
       if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
         setIsMenuOpen(false);
       }
+      if (profileRef.current && !profileRef.current.contains(e.target as Node)) {
+        setIsProfileOpen(false);
+      }
     };
-    if (isMenuOpen) document.addEventListener("mousedown", handleClickOutside);
+    if (isMenuOpen || isProfileOpen) document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, [isMenuOpen]);
+  }, [isMenuOpen, isProfileOpen]);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -101,13 +108,42 @@ export default function Navbar() {
                   }}>
                   <Search className="w-5 h-5" />
                 </button>
-                <div className="hidden md:block">
-                  <button onClick={logout}
-                    className="p-2.5 rounded-2xl transition-all hover:bg-rose-50/10 active:scale-90"
-                    style={{ color: "var(--text-light)" }}
-                    title="Logout">
-                    <LogOut className="w-5 h-5" />
+                <div className="hidden md:block relative" ref={profileRef}>
+                  <button onClick={() => { setIsProfileOpen(!isProfileOpen); setIsSearchOpen(false); setIsMenuOpen(false); }}
+                    className={`flex items-center gap-2 p-2 rounded-2xl transition-all border ${isProfileOpen ? 'shadow-inner' : 'hover:glass'}`}
+                    style={{ 
+                      backgroundColor: isProfileOpen ? 'var(--primary-blush)' : 'transparent',
+                      borderColor: isProfileOpen ? 'var(--border-glass-strong)' : 'transparent',
+                      color: 'var(--text-light)'
+                    }}>
+                    <div className="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center shadow-md">
+                      <User className="w-5 h-5" style={{ color: 'var(--primary)' }} />
+                    </div>
+                    <ChevronDown className={`w-4 h-4 opacity-40 transition-transform ${isProfileOpen ? 'rotate-180' : ''}`} />
                   </button>
+
+                  {/* Desktop Profile Dropdown */}
+                  <AnimatePresence>
+                    {isProfileOpen && (
+                      <motion.div initial={{ y: 10, opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ y: 10, opacity: 0 }}
+                        className="absolute top-[calc(100%+8px)] right-0 w-64 glass-strong rounded-[32px] border shadow-2xl overflow-hidden p-2 z-[130]"
+                        style={{ background: 'var(--bg-glass-strong)', borderColor: 'var(--border-glass-strong)' }}>
+                        <div className="p-5 border-b mb-1" style={{ borderColor: 'var(--border-glass)' }}>
+                           <p className="text-[9px] font-black uppercase tracking-widest opacity-40 mb-1.5">My Account</p>
+                           <p className="font-bold text-sm break-all" style={{ color: 'var(--text-main)' }}>{email}</p>
+                           <p className="text-[10px] font-medium opacity-50 truncate mt-0.5" style={{ color: 'var(--text-muted)' }}>{email?.split('@')[0]}</p>
+                        </div>
+                        <button onClick={logout}
+                          className="w-full flex items-center gap-3 p-4 rounded-2xl transition-all hover:bg-red-50/10 group/item"
+                          style={{ color: 'var(--text-main)' }}>
+                          <div className="w-10 h-10 rounded-xl bg-red-500/10 flex items-center justify-center group-hover/item:rotate-12 transition-transform">
+                            <LogOut className="w-5 h-5 text-red-500" />
+                          </div>
+                          <span className="font-bold text-sm">Logout Forever</span>
+                        </button>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
                 </div>
               </>
             ) : (
@@ -173,11 +209,16 @@ export default function Navbar() {
                         </div>
                         <div>
                            <p className="text-[9px] font-black uppercase tracking-widest opacity-60 mb-0.5" style={{ color: 'var(--primary-deep)' }}>
-                              {userId ? 'Connected' : 'Sanctuary'}
+                              {userId ? 'My Account' : 'Sanctuary'}
                            </p>
-                           <h4 className="font-bold text-sm truncate max-w-[150px]" style={{ color: 'var(--primary-deep)' }}>
-                              {userId ? 'My Sanctuary' : 'Visit Profile'}
+                           <h4 className="font-bold text-sm break-all" style={{ color: 'var(--primary-deep)' }}>
+                              {userId ? email : 'Visit Profile'}
                            </h4>
+                           {userId && (
+                             <p className="text-[10px] opacity-40 truncate" style={{ color: 'var(--primary-deep)' }}>
+                               {email?.split('@')[0]}
+                             </p>
+                           )}
                         </div>
                      </div>
                      {!userId ? (

@@ -5,7 +5,8 @@ import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
 import {
   Sparkles, X, MapPin, Calendar, Clock,
-  Tag, Heart, Loader2, Image as ImageIcon, Hash, ChevronRight, Check
+  Tag, Heart, Loader2, Image as ImageIcon, Hash, ChevronRight, Check,
+  Lock, Users
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { MOODS, CATEGORIES } from "@/lib/constants";
@@ -19,6 +20,7 @@ interface InitialData {
   category?: string; isFavorite: boolean;
   imageUrl?: string; aiCaption?: string;
   tags?: string[];
+  visibility?: string;
 }
 
 interface Props { initialData?: InitialData; mode?: "create" | "edit"; }
@@ -40,6 +42,7 @@ export default function MemoryForm({ initialData, mode = "create" }: Props) {
     mood:       initialData?.mood       || "",
     category:   initialData?.category   || "",
     isFavorite: initialData?.isFavorite || false,
+    visibility: initialData?.visibility || "private",
   });
   const [tagInput, setTagInput] = useState("");
   const [tags, setTags]         = useState<string[]>(initialData?.tags || []);
@@ -95,6 +98,7 @@ export default function MemoryForm({ initialData, mode = "create" }: Props) {
         category: form.category || undefined,
         time:     form.time     || undefined,
         location: form.location || undefined,
+        visibility: form.visibility,
       };
 
       if (mode === "edit" && initialData) {
@@ -249,7 +253,6 @@ export default function MemoryForm({ initialData, mode = "create" }: Props) {
            </div>
         </div>
 
-        {/* ── Tags & Social ── */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-start">
            <div>
              <label className="block text-[10px] font-black uppercase tracking-[0.2em] mb-3 ml-1 opacity-40" style={{ color: "var(--text-main)" }}>Tags & Keywords</label>
@@ -260,7 +263,7 @@ export default function MemoryForm({ initialData, mode = "create" }: Props) {
                      onChange={(e) => setTagInput(e.target.value)} 
                      onKeyDown={(e) => { if (e.key === "Enter" || e.key === ",") { e.preventDefault(); addTag(); } }} />
                 </div>
-                <button onClick={addTag} className="btn-ghost px-5 rounded-xl text-xs font-bold uppercase tracking-widest">Add</button>
+                <button type="button" onClick={addTag} className="btn-ghost px-5 rounded-xl text-xs font-bold uppercase tracking-widest">Add</button>
              </div>
              {tags.length > 0 && (
                <div className="flex flex-wrap gap-2 mt-4">
@@ -268,7 +271,7 @@ export default function MemoryForm({ initialData, mode = "create" }: Props) {
                    <span key={t} className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold glass-strong border"
                      style={{ color: "var(--primary)", borderColor: "var(--border-glass)" }}>
                      #{t}
-                     <button onClick={() => setTags((prev) => prev.filter((x) => x !== t))} className="opacity-50 hover:opacity-100 transition-opacity">
+                     <button type="button" onClick={() => setTags((prev) => prev.filter((x) => x !== t))} className="opacity-50 hover:opacity-100 transition-opacity">
                         <X className="w-3 h-3" />
                      </button>
                    </span>
@@ -277,23 +280,45 @@ export default function MemoryForm({ initialData, mode = "create" }: Props) {
              )}
            </div>
 
-           <div className="pt-7">
-             <button onClick={() => set("isFavorite", !form.isFavorite)}
-               className="flex items-center justify-between w-full px-6 py-4 rounded-[24px] transition-all shadow-sm border"
-               style={{ 
-                 background: form.isFavorite ? "var(--primary-blush)" : "white",
-                 borderColor: form.isFavorite ? "var(--primary)" : "var(--border-glass)"
-               }}>
-               <div className="flex items-center gap-3">
-                  <div className={`w-10 h-10 rounded-2xl flex items-center justify-center transition-all ${form.isFavorite ? 'bg-white shadow-md' : 'glass'}`}>
-                    <Heart className={`w-5 h-5 transition-all ${form.isFavorite ? "text-rose-500 fill-rose-500 scale-110" : "text-rose-300"}`} />
+           <div className="space-y-4">
+              <label className="block text-[10px] font-black uppercase tracking-[0.2em] mb-3 ml-1 opacity-40" style={{ color: "var(--text-main)" }}>Privacy & Highlighting</label>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <button type="button" onClick={() => set("isFavorite", !form.isFavorite)}
+                  className="flex items-center justify-between px-6 py-4 rounded-[24px] transition-all shadow-sm border"
+                  style={{ 
+                    background: form.isFavorite ? "var(--primary-blush)" : "white",
+                    borderColor: form.isFavorite ? "var(--primary)" : "var(--border-glass)"
+                  }}>
+                  <div className="flex items-center gap-3">
+                     <div className={`w-10 h-10 rounded-2xl flex items-center justify-center transition-all ${form.isFavorite ? 'bg-white shadow-md' : 'glass'}`}>
+                       <Heart className={`w-5 h-5 transition-all ${form.isFavorite ? "text-rose-500 fill-rose-500 scale-110" : "text-rose-300"}`} />
+                     </div>
+                     <span className="text-sm font-bold" style={{ color: form.isFavorite ? "var(--primary-deep)" : "var(--text-light)" }}>
+                       {form.isFavorite ? "Favorite" : "Highlight"}
+                     </span>
                   </div>
-                  <span className="text-sm font-bold" style={{ color: form.isFavorite ? "var(--primary-deep)" : "var(--text-light)" }}>
-                    {form.isFavorite ? "Highlighted as Favorite" : "Add to Favorites Library"}
-                  </span>
-               </div>
-               {form.isFavorite && <Check className="w-5 h-5 text-rose-500" />}
-             </button>
+                  {form.isFavorite && <Check className="w-5 h-5 text-rose-500" />}
+                </button>
+
+                <div className="flex bg-white rounded-[24px] p-1.5 border shadow-sm" style={{ borderColor: 'var(--border-glass)' }}>
+                   <button type="button" onClick={() => set("visibility", "private")}
+                     className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all"
+                     style={{ 
+                       background: form.visibility === 'private' ? 'var(--primary-deep)' : 'transparent',
+                       color: form.visibility === 'private' ? 'white' : 'var(--text-muted)'
+                     }}>
+                     <Lock className="w-3.5 h-3.5" /> Private
+                   </button>
+                   <button type="button" onClick={() => set("visibility", "friends")}
+                     className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all"
+                     style={{ 
+                       background: form.visibility === 'friends' ? 'var(--primary)' : 'transparent',
+                       color: form.visibility === 'friends' ? 'white' : 'var(--text-muted)'
+                     }}>
+                     <Users className="w-3.5 h-3.5" /> Friends
+                   </button>
+                </div>
+              </div>
            </div>
         </div>
 

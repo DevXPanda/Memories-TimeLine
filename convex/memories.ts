@@ -2,12 +2,21 @@ import { v } from "convex/values";
 import { query, mutation } from "./_generated/server";
 
 // ─── Helper ───────────────────────────────────────────────────────────────────
+// ─── Helper ───────────────────────────────────────────────────────────────────
 async function attachImageUrl(ctx: any, memory: any) {
   let imageUrl = memory.imageUrl;
   if (memory.imageStorageId && !imageUrl) {
     imageUrl = (await ctx.storage.getUrl(memory.imageStorageId)) ?? undefined;
   }
-  return { ...memory, imageUrl };
+  
+  // Attach creator info
+  const creator = await ctx.db.get(memory.userId);
+  const creatorInfo = creator ? {
+    name: creator.email.split('@')[0],
+    uniqueId: creator.uniqueId
+  } : null;
+
+  return { ...memory, imageUrl, creator: creatorInfo };
 }
 
 // ─── Queries ──────────────────────────────────────────────────────────────────
@@ -22,15 +31,37 @@ export const list = query({
   },
   handler: async (ctx, args) => {
     if (!args.userId) return [];
-    let q = ctx.db.query("memories")
-      .withIndex("by_user", (q) => q.eq("userId", args.userId));
+    
+    // Get user's own memories
+    const myMemories = await ctx.db.query("memories")
+      .withIndex("by_user", (q) => q.eq("userId", args.userId))
+      .collect();
 
-    if (args.category) {
-      // Since we can only use one withIndex, we filter the results if we have other filters
-      // OR we just collect and filter. For simplicity and multi-user safety:
+    // Get friends' ids
+    const friendships = await ctx.db
+      .query("friendships")
+      .filter((q) => 
+        q.and(
+          q.eq(q.field("status"), "accepted"),
+          q.or(q.eq(q.field("user1Id"), args.userId), q.eq(q.field("user2Id"), args.userId))
+        )
+      )
+      .collect();
+
+    const friendIds = friendships.map(f => f.user1Id === args.userId ? f.user2Id : f.user1Id);
+
+    // Get friends' shared memories
+    let sharedMemories: any[] = [];
+    for (const fId of friendIds) {
+       const shared = await ctx.db
+         .query("memories")
+         .withIndex("by_user", (q) => q.eq("userId", fId))
+         .filter((q) => q.eq(q.field("visibility"), "friends"))
+         .collect();
+       sharedMemories = [...sharedMemories, ...shared];
     }
 
-    let memories = await q.collect();
+    let memories = [...myMemories, ...sharedMemories];
 
     // Filter by other criteria
     if (args.category) memories = memories.filter(m => m.category === args.category);
@@ -57,8 +88,27 @@ export const getById = query({
   args: { id: v.id("memories"), userId: v.optional(v.id("users")) },
   handler: async (ctx, args) => {
     const m = await ctx.db.get(args.id);
-    if (!m || m.userId !== args.userId) return null;
-    return attachImageUrl(ctx, m);
+    if (!m) return null;
+    if (m.userId === args.userId) return attachImageUrl(ctx, m);
+    
+    // Check if it's a friend's shared memory
+    if (m.visibility === "friends" && args.userId) {
+       const friendship = await ctx.db
+         .query("friendships")
+         .filter((q) => 
+           q.and(
+             q.eq(q.field("status"), "accepted"),
+             q.or(
+               q.and(q.eq(q.field("user1Id"), args.userId), q.eq(q.field("user2Id"), m.userId)),
+               q.and(q.eq(q.field("user1Id"), m.userId), q.eq(q.field("user2Id"), args.userId))
+             )
+           )
+         )
+         .unique();
+       if (friendship) return attachImageUrl(ctx, m);
+    }
+
+    return null;
   },
 });
 
@@ -66,11 +116,36 @@ export const getTimeline = query({
   args: { userId: v.optional(v.id("users")) },
   handler: async (ctx, args) => {
     if (!args.userId) return [];
-    const memories = await ctx.db
+    
+    // Get all viewable memories (own + friends')
+    const friendships = await ctx.db
+      .query("friendships")
+      .filter((q) => 
+        q.and(
+          q.eq(q.field("status"), "accepted"),
+          q.or(q.eq(q.field("user1Id"), args.userId), q.eq(q.field("user2Id"), args.userId))
+        )
+      )
+      .collect();
+
+    const friendIds = friendships.map(f => f.user1Id === args.userId ? f.user2Id : f.user1Id);
+    
+    const myMemories = await ctx.db
       .query("memories")
       .withIndex("by_user", (q) => q.eq("userId", args.userId))
       .collect();
+
+    let shared: any[] = [];
+    for (const fId of friendIds) {
+       const s = await ctx.db
+         .query("memories")
+         .withIndex("by_user", (q) => q.eq("userId", fId))
+         .filter((q) => q.eq(q.field("visibility"), "friends"))
+         .collect();
+       shared = [...shared, ...s];
+    }
     
+    const memories = [...myMemories, ...shared];
     memories.sort((a,b) => b.date.localeCompare(a.date));
     return Promise.all(memories.map((m) => attachImageUrl(ctx, m)));
   },
@@ -113,12 +188,44 @@ export const getRecent = query({
   args: { limit: v.optional(v.number()), userId: v.optional(v.id("users")) },
   handler: async (ctx, args) => {
     if (!args.userId) return [];
-    const memories = await ctx.db
+    
+    // Get friends ids
+    const friendships = await ctx.db
+      .query("friendships")
+      .filter((q) => 
+        q.and(
+          q.eq(q.field("status"), "accepted"),
+          q.or(q.eq(q.field("user1Id"), args.userId), q.eq(q.field("user2Id"), args.userId))
+        )
+      )
+      .collect();
+
+    const friendIds = friendships.map(f => f.user1Id === args.userId ? f.user2Id : f.user1Id);
+    
+    // Own recent
+    const myRecent = await ctx.db
       .query("memories")
       .withIndex("by_user", (q) => q.eq("userId", args.userId))
       .order("desc")
       .take(args.limit ?? 6);
-    return Promise.all(memories.map((m) => attachImageUrl(ctx, m)));
+
+    // Friend recent
+    let friendRecent: any[] = [];
+    for (const fId of friendIds) {
+       const s = await ctx.db
+         .query("memories")
+         .withIndex("by_user", (q) => q.eq("userId", fId))
+         .filter((q) => q.eq(q.field("visibility"), "friends"))
+         .order("desc")
+         .take(args.limit ?? 6);
+       friendRecent = [...friendRecent, ...s];
+    }
+    
+    const combined = [...myRecent, ...friendRecent]
+      .sort((a, b) => b.createdAt - a.createdAt)
+      .slice(0, args.limit ?? 6);
+
+    return Promise.all(combined.map((m) => attachImageUrl(ctx, m)));
   },
 });
 
@@ -139,10 +246,13 @@ export const create = mutation({
     imageUrl: v.optional(v.string()),
     aiCaption: v.optional(v.string()),
     tags: v.optional(v.array(v.string())),
+    visibility: v.optional(v.string()),
+    sharedWith: v.optional(v.array(v.id("users"))),
   },
   handler: async (ctx, args) => {
     return ctx.db.insert("memories", {
       ...args,
+      visibility: args.visibility ?? "private",
       isFavorite: args.isFavorite ?? false,
       createdAt: Date.now(),
       updatedAt: Date.now(),
@@ -166,6 +276,8 @@ export const update = mutation({
     imageUrl: v.optional(v.string()),
     aiCaption: v.optional(v.string()),
     tags: v.optional(v.array(v.string())),
+    visibility: v.optional(v.string()),
+    sharedWith: v.optional(v.array(v.id("users"))),
   },
   handler: async (ctx, args) => {
     const { id, userId, ...fields } = args;

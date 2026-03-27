@@ -10,6 +10,7 @@
 
 import type * as auth from "../auth.js";
 import type * as events from "../events.js";
+import type * as friends from "../friends.js";
 import type * as http from "../http.js";
 import type * as memories from "../memories.js";
 
@@ -22,6 +23,7 @@ import type {
 declare const fullApi: ApiFromModules<{
   auth: typeof auth;
   events: typeof events;
+  friends: typeof friends;
   http: typeof http;
   memories: typeof memories;
 }>;

@@ -6,6 +6,17 @@ const generateOTP = () => {
   return Math.floor(100000 + Math.random() * 900000).toString();
 };
 
+const generateUniqueId = () => {
+  const letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+  const randomChar = letters[Math.floor(Math.random() * letters.length)];
+  const now = new Date();
+  const d = String(now.getDate()).padStart(2, '0');
+  const m = String(now.getMonth() + 1).padStart(2, '0');
+  const y = now.getFullYear();
+  const rand = Math.floor(100 + Math.random() * 900); // 3 random digits to avoid same-day collisions
+  return `${randomChar}${d}${m}${y}${rand}`;
+};
+
 export const signup = mutation({
   args: { email: v.string() },
   handler: async (ctx, args) => {
@@ -21,12 +32,17 @@ export const signup = mutation({
       if (existingUser.isVerified) {
         throw new Error("User already exists and is verified. Please login.");
       }
+      // If they haven't been given a uniqueId yet (older users), give one now
+      if (!existingUser.uniqueId) {
+        await ctx.db.patch(existingUser._id, { uniqueId: generateUniqueId() });
+      }
       await ctx.db.patch(existingUser._id, { otp, otpExpires });
-      return { status: "verification_required", email: args.email, otp }; // OTP return for dev/test ease, we'll send email too
+      return { status: "verification_required", email: args.email, otp }; 
     }
 
     const userId = await ctx.db.insert("users", {
       email: args.email,
+      uniqueId: generateUniqueId(),
       isVerified: false,
       otp,
       otpExpires,

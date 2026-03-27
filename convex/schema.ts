@@ -11,20 +11,23 @@ export default defineSchema({
     mood: v.optional(v.string()),
     category: v.optional(v.string()),
     isFavorite: v.boolean(),
+    userId: v.optional(v.id("users")),
+    visibility: v.optional(v.string()), // "private" (default for owner) or "friends"
+    sharedWith: v.optional(v.array(v.id("users"))),
     imageStorageId: v.optional(v.id("_storage")),
     imageUrl: v.optional(v.string()),
     aiCaption: v.optional(v.string()),
     tags: v.optional(v.array(v.string())),
     createdAt: v.number(),
     updatedAt: v.optional(v.number()),
-    userId: v.optional(v.id("users")),
   })
     .index("by_date", ["date"])
     .index("by_category", ["category"])
     .index("by_favorite", ["isFavorite"])
     .index("by_mood", ["mood"])
     .index("by_createdAt", ["createdAt"])
-    .index("by_user", ["userId"]),
+    .index("by_user", ["userId"])
+    .index("by_visibility", ["visibility"]),
 
   events: defineTable({
     title: v.string(),
@@ -32,16 +35,31 @@ export default defineSchema({
     type: v.string(), // birthday, anniversary, trip, other
     notes: v.optional(v.string()),
     userId: v.optional(v.id("users")),
+    visibility: v.optional(v.string()), // "private" or "friends"
     createdAt: v.number(),
   })
     .index("by_date", ["date"])
-    .index("by_user", ["userId"]),
+    .index("by_user", ["userId"])
+    .index("by_visibility", ["visibility"]),
 
   users: defineTable({
     email: v.string(),
+    uniqueId: v.optional(v.string()), // e.g. U27032026
     privatePin: v.optional(v.string()), // 4-6 digit chosen pin
     isVerified: v.boolean(),
     otp: v.optional(v.string()),
     otpExpires: v.optional(v.number()),
-  }).index("by_email", ["email"]),
+  })
+    .index("by_email", ["email"])
+    .index("by_uniqueId", ["uniqueId"]),
+
+  friendships: defineTable({
+    user1Id: v.id("users"),
+    user2Id: v.id("users"),
+    status: v.string(), // "pending", "accepted"
+    createdAt: v.number(),
+  })
+    .index("by_user1", ["user1Id"])
+    .index("by_user2", ["user2Id"])
+    .index("by_both", ["user1Id", "user2Id"]),
 });

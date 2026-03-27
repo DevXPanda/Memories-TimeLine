@@ -1,7 +1,7 @@
 "use client";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
-import { Calendar, Bell, Trash2, Plus, X, Clock, PartyPopper, Heart } from "lucide-react";
+import { Calendar, Bell, Trash2, Plus, X, Clock, PartyPopper, Heart, Users } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useAuth } from "@/components/AuthProvider";
 import { motion, AnimatePresence } from "framer-motion";
@@ -28,6 +28,7 @@ export default function UpcomingEvents() {
     date: "",
     type: "birthday",
     notes: "",
+    visibility: "private",
   });
 
   useEffect(() => {
@@ -42,7 +43,7 @@ export default function UpcomingEvents() {
     try {
       await createEvent({ userId: userId!, ...formData });
       setShowAdd(false);
-      setFormData({ title: "", date: "", type: "birthday", notes: "" });
+      setFormData({ title: "", date: "", type: "birthday", notes: "", visibility: "private" });
     } finally {
       setLoading(false);
     }
@@ -116,11 +117,21 @@ export default function UpcomingEvents() {
                 background: ev.timer.isToday ? 'var(--primary-blush)' : 'var(--bg-glass-strong)'
               }}>
               
-              <button onClick={() => userId && removeEvent({ id: ev._id, userId })}
-                className="absolute top-4 right-4 p-2 rounded-xl opacity-0 group-hover:opacity-100 hover:bg-white/50 transition-all z-10"
-                style={{ color: "var(--text-light)" }}>
-                <Trash2 className="w-4 h-4" />
-              </button>
+              <div className="absolute top-4 right-4 flex items-center gap-2">
+                 {ev.visibility === "friends" && (
+                    <div className="flex items-center gap-1.5 px-2 py-1 rounded-lg bg-rose-50 border border-rose-100 shadow-sm">
+                       <Users className="w-3 h-3 text-rose-400" />
+                       <span className="text-[8px] font-black uppercase tracking-tighter text-rose-600">Shared</span>
+                    </div>
+                 )}
+                 {ev.userId === userId && (
+                    <button onClick={() => userId && removeEvent({ id: ev._id, userId })}
+                      className="p-2 rounded-xl opacity-0 group-hover:opacity-100 hover:bg-white/50 transition-all z-10"
+                      style={{ color: "var(--text-light)" }}>
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                 )}
+              </div>
 
               <div className="relative z-10 flex flex-col h-full">
                 <div className="flex items-start gap-4 mb-6">
@@ -177,7 +188,7 @@ export default function UpcomingEvents() {
                   <Clock className="w-5 h-5" style={{ color: "var(--primary)" }} /> Schedule Moment
                 </h3>
                 <button onClick={() => setShowAdd(false)} className="p-2 rounded-full hover:bg-white/50 transition-colors" style={{ color: "var(--text-light)" }}>
-                  <X className="w-5 h-5" />
+                   <X className="w-5 h-5" />
                 </button>
               </div>
               <form onSubmit={handleAdd} className="p-8 space-y-5">
@@ -204,8 +215,25 @@ export default function UpcomingEvents() {
                   </div>
                 </div>
                 <div>
+                   <label className="block text-[10px] font-bold uppercase tracking-widest opacity-40 mb-3 ml-1" style={{ color: "var(--text-main)" }}>Privacy & Sharing</label>
+                   <div className="flex gap-3">
+                      <button type="button" 
+                        onClick={() => setFormData({...formData, visibility: "private"})}
+                        className={`flex-1 flex flex-col items-center gap-2 p-4 rounded-2xl border-2 transition-all ${formData.visibility === "private" ? 'border-rose-500 bg-rose-50 ring-4 ring-rose-500/10' : 'border-black/5 hover:border-black/10'}`}>
+                         <Heart className={`w-5 h-5 ${formData.visibility === "private" ? 'text-rose-500' : 'opacity-20'}`} />
+                         <span className="text-[10px] font-black uppercase tracking-widest opacity-60">Private</span>
+                      </button>
+                      <button type="button" 
+                        onClick={() => setFormData({...formData, visibility: "friends"})}
+                        className={`flex-1 flex flex-col items-center gap-2 p-4 rounded-2xl border-2 transition-all ${formData.visibility === "friends" ? 'border-indigo-500 bg-indigo-50 ring-4 ring-indigo-500/10' : 'border-black/5 hover:border-black/10'}`}>
+                         <Users className={`w-5 h-5 ${formData.visibility === "friends" ? 'text-indigo-500' : 'opacity-20'}`} />
+                         <span className="text-[10px] font-black uppercase tracking-widest opacity-60">Friends</span>
+                      </button>
+                   </div>
+                </div>
+                <div>
                   <label className="block text-[10px] font-bold uppercase tracking-widest opacity-40 mb-2 ml-1" style={{ color: "var(--text-main)" }}>Private Notes</label>
-                  <textarea className="input-rose min-h-[100px] resize-none" placeholder="Surprise plan or notes for each other..." 
+                  <textarea className="input-rose min-h-[80px] resize-none" placeholder="Surprise plan or notes for each other..." 
                     value={formData.notes} onChange={e => setFormData({...formData, notes: e.target.value})} />
                 </div>
                 <button type="submit" disabled={loading}
