@@ -135,12 +135,12 @@ export default function MemoryCard({ memory }: { memory: Memory }) {
             <div className="mb-6">
               <div className="flex items-center gap-2 mb-2">
                 <div className="h-px flex-1 opacity-10" style={{ background: "var(--primary)" }} />
-                <span className="text-[10px] font-bold uppercase tracking-widest opacity-40" style={{ color: "var(--primary)" }}>Dil's Note</span>
+                <span className="text-[10px] font-bold uppercase tracking-widest opacity-40" style={{ color: "var(--primary)" }}>Dil&apos;s Note</span>
                 <div className="h-px flex-1 opacity-10" style={{ background: "var(--primary)" }} />
               </div>
               <p className="text-sm italic leading-relaxed text-center px-2"
                 style={{ fontFamily: "var(--font-script)", color: "var(--primary)" }}>
-                "{memory.aiCaption}"
+                &quot;{memory.aiCaption}&quot;
               </p>
             </div>
           )}

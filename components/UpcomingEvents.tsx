@@ -89,7 +89,7 @@ export default function UpcomingEvents() {
             <h2 className="text-xl sm:text-2xl font-bold" style={{ fontFamily: "var(--font-serif)", color: "var(--primary-deep)" }}>
               Upcoming Moments
             </h2>
-            <p className="text-xs font-medium opacity-60" style={{ color: "var(--text-muted)" }}>Don't miss a single highlight</p>
+            <p className="text-xs font-medium opacity-60" style={{ color: "var(--text-muted)" }}>Don&apos;t miss a single highlight</p>
           </div>
         </div>
         <button onClick={() => setShowAdd(true)}

@@ -39,7 +39,7 @@ export default function EditPage({ params }: { params: { id: string } }) {
           <div className="text-center py-32 glass-strong rounded-[48px] border" style={{ borderColor: "var(--border-glass)" }}>
             <p className="text-8xl mb-8 animate-float">💔</p>
             <h2 className="text-3xl font-bold mb-4" style={{ fontFamily: "var(--font-serif)", color: "var(--primary-deep)" }}>Story Missing</h2>
-            <p className="text-sm opacity-60 font-medium mb-12" style={{ color:"var(--text-muted)" }}>This specific moment couldn't be found in your sanctuary.</p>
+            <p className="text-sm opacity-60 font-medium mb-12" style={{ color:"var(--text-muted)" }}>This specific moment couldn&apos;t be found in your sanctuary.</p>
             <Link href="/" className="btn-primary px-10 py-4 shadow-xl">Back to Gallery</Link>
           </div>
         ) : (

@@ -238,7 +238,7 @@ export default function MemoryForm({ initialData, mode = "create" }: Props) {
                value={form.caption} onChange={(e) => set("caption", e.target.value)} />
            </div>
            <div>
-             <label className="block text-[10px] font-black uppercase tracking-[0.2em] mb-3 ml-1 opacity-40" style={{ color: "var(--text-main)" }}>Dil's Personal Note</label>
+             <label className="block text-[10px] font-black uppercase tracking-[0.2em] mb-3 ml-1 opacity-40" style={{ color: "var(--text-main)" }}>Dil&apos;s Personal Note</label>
              <div className="relative">
                 <Sparkles className="absolute top-4 right-4 w-5 h-5 text-rose-300 pointer-events-none" />
                 <textarea className="input-rose min-h-[180px] rounded-[24px] p-5 italic border-2"

@@ -28,7 +28,7 @@ export default function HeroSection() {
           </h1>
           
           <p className="text-base sm:text-xl max-w-3xl mx-auto mb-12 leading-relaxed font-medium opacity-80" style={{ color: "var(--text-muted)" }}>
-            Our Memories is your personal digital scrapbook. Designed for couples and best friends, it's a safe place to store photos, notes, and milestones that matter most.
+            Our Memories is your personal digital scrapbook. Designed for couples and best friends, it&apos;s a safe place to store photos, notes, and milestones that matter most.
           </p>
           
           <div className="flex flex-wrap items-center justify-center gap-5">

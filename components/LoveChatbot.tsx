@@ -1,7 +1,7 @@
 "use client";
 import { useState, useRef, useEffect, useCallback } from "react";
 import Link from "next/link";
-import { MessageCircleHeart, Heart, X, Send, Settings2, Trash2, RefreshCw, History, Plus, Image, Loader2, ChevronDown } from "lucide-react";
+import { MessageCircleHeart, Heart, X, Send, Settings2, Trash2, RefreshCw, History, Plus, Image as ImageIcon, Loader2, ChevronDown } from "lucide-react";
 import { useMutation } from "convex/react";
 import { api } from "../convex/_generated/api";
 import { CHAT_SETTINGS_KEY, CHAT_HISTORY_KEY } from "@/lib/constants";
@@ -46,7 +46,7 @@ export default function LoveChatbot() {
   const [showSet, setShowSet] = useState(false);
   const [showHist, setShowHist] = useState(false);
   const [inited, setInited] = useState(false);
-  const [nudge, setNudge]   = useState("");
+  const [nudge, setNudge] = useState("");
 
   const generateUploadUrl = useMutation(api.memories.generateUploadUrl);
   const createMemory = useMutation(api.memories.create);
@@ -61,7 +61,7 @@ export default function LoveChatbot() {
     setTyping(true);
     let i = 0;
     setMsgs(p => [...p, { id: `${Date.now()}`, role: "assistant", content: "", ts: Date.now() }]);
-    
+
     const int = setInterval(() => {
       setMsgs(p => {
         const last = [...p];
@@ -247,26 +247,26 @@ export default function LoveChatbot() {
           {/* Nudge Bubble - Positioned to the LEFT now */}
           <AnimatePresence>
             {nudge && !open && (
-               <motion.div 
-                 initial={{ opacity: 0, x: 20, scale: 0.9 }}
-                 animate={{ opacity: 1, x: 0, scale: 1 }}
-                 exit={{ opacity: 0, x: 20, scale: 0.9 }}
-                 className="bg-white/95 backdrop-blur-md px-5 py-3 rounded-[24px] rounded-br-[4px] shadow-2xl border relative flex-shrink-0"
-                 onClick={() => setOpen(true)}
-                 style={{ cursor: "pointer", borderColor: "var(--border-glass-strong)", boxShadow: "0 10px 40px rgba(0, 0, 0, 0.1)" }}>
-                 <p className="text-[13px] font-bold whitespace-nowrap" style={{ color: "var(--primary)" }}>{nudge}</p>
-                 <div className="absolute top-1/2 -translate-y-1/2 -right-2 w-3 h-3 bg-white/95 border-r border-t rotate-45" style={{ borderColor: "var(--border-glass-strong)" }} />
-               </motion.div>
+              <motion.div
+                initial={{ opacity: 0, x: 20, scale: 0.9 }}
+                animate={{ opacity: 1, x: 0, scale: 1 }}
+                exit={{ opacity: 0, x: 20, scale: 0.9 }}
+                className="bg-white/95 backdrop-blur-md px-5 py-3 rounded-[24px] rounded-br-[4px] shadow-2xl border relative flex-shrink-0"
+                onClick={() => setOpen(true)}
+                style={{ cursor: "pointer", borderColor: "var(--border-glass-strong)", boxShadow: "0 10px 40px rgba(0, 0, 0, 0.1)" }}>
+                <p className="text-[13px] font-bold whitespace-nowrap" style={{ color: "var(--primary)" }}>{nudge}</p>
+                <div className="absolute top-1/2 -translate-y-1/2 -right-2 w-3 h-3 bg-white/95 border-r border-t rotate-45" style={{ borderColor: "var(--border-glass-strong)" }} />
+              </motion.div>
             )}
           </AnimatePresence>
 
           {/* Chatbot FAB */}
-          <button 
+          <button
             onClick={() => setOpen(!open)}
             className={`w-14 h-14 rounded-[22px] flex items-center justify-center transition-all hover:scale-110 active:scale-95 shadow-2xl border border-white/20 group relative flex-shrink-0 ${open ? "bg-white rotate-90" : ""}`}
-            style={{ 
+            style={{
               background: open ? "white" : "var(--primary)",
-              boxShadow: open ? "0 10px 30px rgba(0,0,0,0.1)" : "0 10px 30px rgba(var(--primary-rgb), 0.3)" 
+              boxShadow: open ? "0 10px 30px rgba(0,0,0,0.1)" : "0 10px 30px rgba(var(--primary-rgb), 0.3)"
             }}>
             {open ? (
               <X className="w-6 h-6" style={{ color: "var(--primary)" }} />
@@ -283,13 +283,13 @@ export default function LoveChatbot() {
       {/* Chat Window */}
       <AnimatePresence>
         {open && (
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0, scale: 0.9, y: 50, x: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0, x: 0 }}
             exit={{ opacity: 0, scale: 0.9, y: 50, x: 20 }}
             className="fixed bottom-24 right-6 z-[60] w-[90vw] sm:w-[400px] h-[75vh] sm:h-[600px] glass-strong rounded-[40px] shadow-[0_20px_60px_rgba(0,0,0,0.15)] border overflow-hidden flex flex-col bg-white"
             style={{ borderColor: "var(--border-glass-strong)" }}>
-            
+
             {/* Header */}
             <div className="p-6 border-b flex items-center justify-between" style={{ background: "var(--primary-blush)", borderColor: "var(--border-glass)" }}>
               <div className="flex items-center gap-3">
@@ -297,13 +297,13 @@ export default function LoveChatbot() {
                   <Heart className="w-6 h-6 text-rose-500 fill-rose-500 animate-pulse" />
                 </div>
                 <div>
-                   <h3 className="font-bold text-lg leading-tight" style={{ fontFamily: "var(--font-serif)", color: "var(--primary-deep)" }}>
-                     {settings.partnerName || "Dil"}
-                   </h3>
-                   <div className="flex items-center gap-1.5">
-                     <div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
-                     <span className="text-[10px] uppercase tracking-widest font-black opacity-30" style={{ color: "var(--text-main)" }}>Always Loving</span>
-                   </div>
+                  <h3 className="font-bold text-lg leading-tight" style={{ fontFamily: "var(--font-serif)", color: "var(--primary-deep)" }}>
+                    {settings.partnerName || "Dil"}
+                  </h3>
+                  <div className="flex items-center gap-1.5">
+                    <div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
+                    <span className="text-[10px] uppercase tracking-widest font-black opacity-30" style={{ color: "var(--text-main)" }}>Always Loving</span>
+                  </div>
                 </div>
               </div>
               <div className="flex items-center gap-1">
@@ -330,7 +330,7 @@ export default function LoveChatbot() {
                       <input className="input-rose h-12 rounded-xl text-sm" placeholder="e.g. Jaan, Baby, [Name]..." value={tempSet.userName} onChange={(e) => setTempSet((s) => ({ ...s, userName: e.target.value }))} />
                     </div>
                     <div>
-                      <label className="block text-[10px] font-bold uppercase tracking-widest opacity-40 mb-2 ml-1" style={{ color: "var(--text-main)" }}>Bot's Name</label>
+                      <label className="block text-[10px] font-bold uppercase tracking-widest opacity-40 mb-2 ml-1" style={{ color: "var(--text-main)" }}>Bot&apos;s Name</label>
                       <input className="input-rose h-12 rounded-xl text-sm" placeholder="e.g. Dil, Love, Priyam..." value={tempSet.partnerName} onChange={(e) => setTempSet((s) => ({ ...s, partnerName: e.target.value }))} />
                     </div>
                   </div>
@@ -347,8 +347,8 @@ export default function LoveChatbot() {
                   </div>
                   {sessions.length === 0 ? (
                     <div className="flex-1 flex flex-col items-center justify-center opacity-30 text-center py-20 gap-4">
-                       <MessageCircleHeart className="w-12 h-12" />
-                       <p className="text-xs font-black uppercase tracking-[0.2em]">No stories yet</p>
+                      <MessageCircleHeart className="w-12 h-12" />
+                      <p className="text-xs font-black uppercase tracking-[0.2em]">No stories yet</p>
                     </div>
                   ) :
                     sessions.map(s => (
@@ -373,7 +373,7 @@ export default function LoveChatbot() {
                       <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} key={m.id} className={`flex gap-3 ${m.role === "user" ? "justify-end" : "justify-start"}`}>
                         {m.role === "assistant" && <div className="w-9 h-9 rounded-2xl flex-shrink-0 flex items-center justify-center text-sm shadow-sm mt-1 border" style={{ background: "var(--primary-blush)", borderColor: "var(--border-glass)" }}>💕</div>}
                         <div className="max-w-[85%]">
-                          <div className={`px-5 py-3.5 rounded-[24px] text-sm leading-relaxed shadow-sm ${m.role === "user" ? "rounded-tr-[4px] font-medium" : "rounded-tl-[4px] border border-rose-100 bg-white"}`} 
+                          <div className={`px-5 py-3.5 rounded-[24px] text-sm leading-relaxed shadow-sm ${m.role === "user" ? "rounded-tr-[4px] font-medium" : "rounded-tl-[4px] border border-rose-100 bg-white"}`}
                             style={m.role === "user" ? { background: "var(--primary)", color: "#fff" } : { color: "var(--primary-deep)" }}>
                             {m.content || <div className="flex gap-1.5 items-center h-5">{[0, 1, 2].map((i) => <span key={i} className="w-1.5 h-1.5 rounded-full animate-bounce" style={{ background: "var(--primary-soft)", animationDelay: `${i * 0.15}s` }} />)}</div>}
                           </div>
@@ -388,12 +388,12 @@ export default function LoveChatbot() {
                       {QUICK.map((q) => <button key={q} onClick={() => send(q)} disabled={busy || typing} className="flex-shrink-0 text-[9px] font-black uppercase tracking-widest px-4 py-2 rounded-xl transition-all hover:scale-105 active:scale-95 glass border disabled:opacity-30" style={{ borderColor: "var(--border-glass)", color: "var(--primary)" }}>{q}</button>)}
                     </div>
                     <div className="flex items-center gap-3">
-                       <input type="file" ref={fileRef} className="hidden" accept="image/*" onChange={handleUpload} />
-                       <button onClick={() => fileRef.current?.click()} disabled={busy || uploading} title="Upload photo" className="w-12 h-12 rounded-2xl flex items-center justify-center transition-all glass hover:shadow-lg disabled:opacity-30 flex-shrink-0 border" style={{ color: "var(--primary)", borderColor: "var(--border-glass)" }}>
-                         {uploading ? <Loader2 className="w-5 h-5 animate-spin" /> : <Image className="w-5 h-5" />}
-                       </button>
-                       <input ref={inRef} value={input} onChange={(e) => setInput(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); send(); } }} placeholder={uploading ? "Analyzing... 💕" : "Write your heart out... 💬"} disabled={busy || typing || uploading} className="flex-1 px-5 py-3.5 rounded-2xl text-sm outline-none transition-all placeholder:text-rose-300 font-medium border" style={{ background: "var(--primary-blush)", borderColor: "var(--border-glass)", color: "var(--primary-deep)" }} />
-                       <button onClick={() => send()} disabled={!input.trim() || busy || typing || uploading} className="w-12 h-12 rounded-2xl flex items-center justify-center transition-all hover:scale-110 active:scale-90 disabled:opacity-30 disabled:cursor-not-allowed flex-shrink-0 shadow-xl" style={{ background: "var(--primary)" }}><Send className="w-5 h-5 text-white" /></button>
+                      <input type="file" ref={fileRef} className="hidden" accept="image/*" onChange={handleUpload} />
+                      <button onClick={() => fileRef.current?.click()} disabled={busy || uploading} title="Upload photo" className="w-12 h-12 rounded-2xl flex items-center justify-center transition-all glass hover:shadow-lg disabled:opacity-30 flex-shrink-0 border" style={{ color: "var(--primary)", borderColor: "var(--border-glass)" }}>
+                        {uploading ? <Loader2 className="w-5 h-5 animate-spin" /> : <ImageIcon className="w-5 h-5" />}
+                      </button>
+                      <input ref={inRef} value={input} onChange={(e) => setInput(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); send(); } }} placeholder={uploading ? "Analyzing... 💕" : "Write your heart out... 💬"} disabled={busy || typing || uploading} className="flex-1 px-5 py-3.5 rounded-2xl text-sm outline-none transition-all placeholder:text-rose-300 font-medium border" style={{ background: "var(--primary-blush)", borderColor: "var(--border-glass)", color: "var(--primary-deep)" }} />
+                      <button onClick={() => send()} disabled={!input.trim() || busy || typing || uploading} className="w-12 h-12 rounded-2xl flex items-center justify-center transition-all hover:scale-110 active:scale-90 disabled:opacity-30 disabled:cursor-not-allowed flex-shrink-0 shadow-xl" style={{ background: "var(--primary)" }}><Send className="w-5 h-5 text-white" /></button>
                     </div>
                   </div>
                 </>

@@ -57,7 +57,7 @@ export default function MemoryDetailPage({ params }: { params: { id: string } })
           <div className="text-center glass-strong p-16 rounded-[48px] border max-w-lg shadow-2xl" style={{ borderColor: "var(--border-glass)" }}>
             <p className="text-8xl mb-10 animate-float">💔</p>
             <h2 className="text-3xl font-bold mb-4" style={{ fontFamily: "var(--font-serif)", color: "var(--primary-deep)" }}>Moment Not Found</h2>
-            <p className="mb-10 text-sm opacity-60 font-medium leading-relaxed" style={{ color: "var(--text-muted)" }}>This beautiful moment seems to have slipped away, or perhaps it's a private secret between hearts.</p>
+            <p className="mb-10 text-sm opacity-60 font-medium leading-relaxed" style={{ color: "var(--text-muted)" }}>This beautiful moment seems to have slipped away, or perhaps it&apos;s a private secret between hearts.</p>
             <Link href="/" className="btn-primary px-10 py-4 shadow-xl">Back to Sanctuary</Link>
           </div>
         </main>
@@ -174,11 +174,11 @@ export default function MemoryDetailPage({ params }: { params: { id: string } })
                       <Sparkles className="w-8 h-8" />
                     </div>
                     <span className="text-[10px] font-black uppercase tracking-[0.3em] opacity-40" style={{ color: "var(--primary-deep)" }}>
-                      Dil's Heartfelt Note
+                      Dil&apos;s Heartfelt Note
                     </span>
                     <p className="text-3xl sm:text-4xl italic leading-relaxed"
                       style={{ fontFamily: "var(--font-script)", color: "var(--primary-deep)" }}>
-                      "{memory.aiCaption}"
+                      &quot;{memory.aiCaption}&quot;
                     </p>
                   </div>
                 </motion.div>

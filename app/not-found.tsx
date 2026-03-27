@@ -11,7 +11,7 @@ export default function NotFound() {
           Page Not Found
         </h1>
         <p className="text-sm mb-8" style={{ color:"#a07080" }}>
-          This page doesn't exist... but our memories do 💕
+          This page doesn&apos;t exist... but our memories do 💕
         </p>
         <Link href="/" className="btn-primary">
           <Heart className="w-4 h-4" />Go Home
