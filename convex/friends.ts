@@ -24,6 +24,7 @@ export const sendRequest = mutation({
       .unique();
 
     if (existing) {
+      if (existing.status === "blocked") throw new Error("This action is restricted... 🔒");
       if (existing.status === "accepted") throw new Error("Aap already friends hain! ✨");
       if (existing.user1Id === args.userId) throw new Error("Request already sent... Intezar kariye! ⏳");
       throw new Error("Pehle se hi ek request aayi hui hai! Accept it? 😉");
@@ -63,6 +64,20 @@ export const updateAccess = mutation({
   },
 });
 
+export const removeFriend = mutation({
+  args: { friendshipId: v.id("friendships") },
+  handler: async (ctx, args) => {
+    await ctx.db.delete(args.friendshipId);
+  },
+});
+
+export const blockFriend = mutation({
+  args: { friendshipId: v.id("friendships"), userId: v.id("users") },
+  handler: async (ctx, args) => {
+    await ctx.db.patch(args.friendshipId, { status: "blocked", blockedById: args.userId });
+  },
+});
+
 export const listFriends = query({
   args: { userId: v.id("users") },
   handler: async (ctx, args) => {
@@ -70,7 +85,7 @@ export const listFriends = query({
       .query("friendships")
       .filter((q) => 
         q.and(
-          q.eq(q.field("status"), "accepted"),
+          q.or(q.eq(q.field("status"), "accepted"), q.eq(q.field("status"), "blocked")),
           q.or(q.eq(q.field("user1Id"), args.userId), q.eq(q.field("user2Id"), args.userId))
         )
       )
@@ -81,12 +96,27 @@ export const listFriends = query({
       const isUser1 = f.user1Id === args.userId;
       const friendId = isUser1 ? f.user2Id : f.user1Id;
       const friend = await ctx.db.get(friendId);
-      if (friend) friendsList.push({ 
-        ...friend, 
-        friendshipId: f._id, 
-        myAccessToFriend: isUser1 ? (f.user2Access || ["all"]) : (f.user1Access || ["all"]),
-        friendAccessToMe: isUser1 ? (f.user1Access || ["all"]) : (f.user2Access || ["all"])
-      });
+      if (friend) {
+        // Only show if accepted OR if user is NOT the blocker
+        if (f.status === "accepted") {
+          friendsList.push({ 
+            ...friend, 
+            friendshipId: f._id, 
+            status: f.status,
+            myAccessToFriend: isUser1 ? (f.user2Access || ["all"]) : (f.user1Access || ["all"]),
+            friendAccessToMe: isUser1 ? (f.user1Access || ["all"]) : (f.user2Access || ["all"])
+          });
+        } else if (f.status === "blocked" && f.blockedById !== args.userId) {
+          // You were blocked by this person
+          friendsList.push({
+            _id: friend._id,
+            email: "Hidden User",
+            uniqueId: "RESTRICTED",
+            friendshipId: f._id,
+            status: "blocked_by_other"
+          });
+        }
+      }
     }
     return friendsList;
   },
@@ -107,5 +137,43 @@ export const listPending = query({
        if (sender) pendingList.push({ ...sender, friendshipId: r._id });
     }
     return pendingList;
+  },
+});
+
+export const listBlocked = query({
+  args: { userId: v.id("users") },
+  handler: async (ctx, args) => {
+    const blocked = await ctx.db
+      .query("friendships")
+      .filter((q) => 
+        q.and(
+          q.eq(q.field("status"), "blocked"),
+          q.eq(q.field("blockedById"), args.userId)
+        )
+      )
+      .collect();
+
+    const blockedList = [];
+    for (const b of blocked) {
+      const isUser1 = b.user1Id === args.userId;
+      const friendId = isUser1 ? b.user2Id : b.user1Id;
+      const friend = await ctx.db.get(friendId);
+      if (friend) blockedList.push({ 
+        ...friend, 
+        friendshipId: b._id 
+      });
+    }
+    return blockedList;
+  },
+});
+
+export const unblockFriend = mutation({
+  args: { friendshipId: v.id("friendships"), userId: v.id("users") },
+  handler: async (ctx, args) => {
+    const f = await ctx.db.get(args.friendshipId);
+    if (!f || f.blockedById !== args.userId) {
+      throw new Error("Only the original blocker can restore this connection.");
+    }
+    await ctx.db.patch(args.friendshipId, { status: "accepted", blockedById: undefined });
   },
 });

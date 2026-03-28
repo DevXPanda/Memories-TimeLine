@@ -62,6 +62,7 @@ export default defineSchema({
     status: v.string(), // "pending", "accepted"
     user1Access: v.optional(v.array(v.string())), // What user2 can see of user1 (set by user1)
     user2Access: v.optional(v.array(v.string())), // What user1 can see of user2 (set by user2)
+    blockedById: v.optional(v.id("users")),
     createdAt: v.number(),
   })
     .index("by_user1", ["user1Id"])

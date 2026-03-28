@@ -5,40 +5,43 @@ import { api } from "@/convex/_generated/api";
 import { useAuth } from "@/components/AuthProvider";
 import { 
   UserPlus, Users, Clock, Check, Shield, 
-  Search, Copy, Send, Loader2, Sparkles, User, Key, Heart
+  Search, Copy, Send, Loader2, Sparkles, User, Key, Heart, Ban, UserMinus
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import { useSanctuaryUI } from "@/components/SanctuaryUIProvider";
 
 export default function FriendsPage() {
   const { userId } = useAuth();
   const user = useQuery(api.auth.getUser, { userId: userId ?? undefined });
   const friends = useQuery(api.friends.listFriends, { userId: userId! }) || [];
   const pending = useQuery(api.friends.listPending, { userId: userId! }) || [];
+  const blocked = useQuery(api.friends.listBlocked, { userId: userId! }) || [];
   
   const sendRequest = useMutation(api.friends.sendRequest);
   const acceptRequest = useMutation(api.friends.acceptRequest);
   const updateAccess = useMutation(api.friends.updateAccess);
+  const removeFriend = useMutation(api.friends.removeFriend);
+  const blockFriend = useMutation(api.friends.blockFriend);
+  const unblockFriend = useMutation(api.friends.unblockFriend);
+
+  const { toast, confirm } = useSanctuaryUI();
 
   const [uidInput, setUidInput] = useState("");
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
-  const [success, setSuccess] = useState("");
 
   const handleSend = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!uidInput.trim()) return;
-    setLoading(true); setError(""); setSuccess("");
+    setLoading(true);
     try {
       await sendRequest({ userId: userId!, friendUniqueId: uidInput.trim().toUpperCase() });
-      setSuccess("Sent! ✨");
+      toast("Invitation sent to your friend! ✨", "success");
       setUidInput("");
-      setTimeout(() => setSuccess(""), 4000);
     } catch (err: any) {
-      setError(err.message || "Failed");
-      setTimeout(() => setError(""), 4000);
+      toast(err.message || "Could not send invitation", "error");
     } finally {
       setLoading(false);
     }
@@ -47,8 +50,7 @@ export default function FriendsPage() {
   const copyUid = () => {
     if (user?.uniqueId) {
       navigator.clipboard.writeText(user.uniqueId);
-      setSuccess("Copied! 📋");
-      setTimeout(() => setSuccess(""), 3000);
+      toast("Copied Identity Handle! 📋", "success");
     }
   };
 
@@ -118,21 +120,12 @@ export default function FriendsPage() {
                        </div>
                        <button 
                          disabled={loading || !uidInput}
-                         className="h-10 px-5 rounded-xl bg-gradient-to-r from-rose-500 to-rose-600 text-white shadow-lg hover:scale-105 active:scale-95 transition-all disabled:opacity-30 flex items-center justify-center font-black text-[9px] uppercase tracking-widest gap-2"
+                         className="btn-primary h-10 px-5 rounded-xl disabled:opacity-30 flex items-center justify-center font-black text-[9px] uppercase tracking-widest gap-2"
                        >
-                         {loading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <><Send className="w-3 h-3" /> Invite</>}
+                         {loading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <><Send className="w-3 h-3 text-white" /> <span className="text-white">Invite</span></>}
                        </button>
                      </div>
                   </form>
-                  <AnimatePresence>
-                     {(error || success) && (
-                       <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 10 }}
-                         className={`absolute bottom-1 left-4 right-4 py-1 rounded-lg text-[8px] font-black uppercase tracking-widest border text-center z-20 ${error ? 'bg-red-50 text-red-500 border-red-100' : 'bg-green-50 text-green-600 border-green-100'}`}
-                       >
-                         {error || success}
-                       </motion.div>
-                     )}
-                  </AnimatePresence>
                </motion.div>
             </div>
           </motion.div>
@@ -204,16 +197,18 @@ export default function FriendsPage() {
           </div>
 
           {friends.length === 0 ? (
-            <div className="text-center py-40 glass-strong rounded-[48px] border-4 border-dashed bg-white/5 relative overflow-hidden" style={{ borderColor: 'var(--border-glass-strong)' }}>
-               <div className="max-w-xs mx-auto space-y-6 relative z-10">
-                  <div className="w-20 h-20 rounded-[32px] bg-rose-50 flex items-center justify-center mx-auto shadow-inner border border-rose-100 animate-float">
-                     <UserPlus className="w-8 h-8 opacity-20" style={{ color: 'var(--primary)' }} />
+            <div className="text-center py-20 px-6 glass-strong rounded-[48px] border-4 border-dashed bg-white/5 relative overflow-hidden" style={{ borderColor: 'var(--border-glass-strong)' }}>
+               <div className="max-w-xs mx-auto space-y-5 relative z-10">
+                  <div className="w-16 h-16 rounded-[24px] glass flex items-center justify-center mx-auto shadow-inner border animate-float" style={{ borderColor: 'var(--border-glass-strong)' }}>
+                     <UserPlus className="w-6 h-6 opacity-20" style={{ color: 'var(--primary)' }} />
                   </div>
-                  <h4 className="text-2xl font-bold tracking-tight" style={{ fontFamily: "var(--font-serif)", color: "var(--primary-deep)" }}>Silent Sanctuary</h4>
-                  <p className="text-sm font-medium opacity-50 leading-relaxed italic px-8">
-                    Your circle is ready. Share your handle to start building a private world together.
-                  </p>
-                  <button onClick={copyUid} className="btn-primary py-2.5 px-6 text-[10px] uppercase tracking-widest font-black">Copy Identity Handle</button>
+                  <div className="space-y-2">
+                    <h4 className="text-xl font-bold tracking-tight" style={{ fontFamily: "var(--font-serif)", color: "var(--primary-deep)" }}>Silent Sanctuary</h4>
+                    <p className="text-[11px] font-medium opacity-50 leading-relaxed italic px-8">
+                      Your circle is ready. Share your handle to start building a private world together.
+                    </p>
+                  </div>
+                  <button onClick={copyUid} className="btn-primary py-2.5 px-8 text-[10px] uppercase tracking-widest font-black">Copy Identity Handle</button>
                </div>
             </div>
           ) : (
@@ -225,79 +220,132 @@ export default function FriendsPage() {
                    className="glass-strong rounded-[32px] p-6 border group relative overflow-hidden transition-all duration-500 hover:shadow-xl h-auto flex flex-col gap-6" 
                    style={{ borderColor: 'var(--border-glass-strong)' }}
                  >
-                    {/* Top: Avatar & Identity */}
-                    <div className="flex items-center justify-between gap-4 relative z-10 w-full">
-                       <div className="flex items-center gap-4 flex-1 min-w-0">
-                          <div className="w-14 h-14 rounded-2xl bg-white flex items-center justify-center shadow-lg relative border border-rose-50/50 group-hover:scale-105 group-hover:rotate-3 transition-transform duration-500 shrink-0">
-                              <User className="w-7 h-7 opacity-10" />
-                              <div className="absolute -top-1 -right-1 w-3.5 h-3.5 rounded-full bg-green-500 border-[3px] border-white shadow-sm" />
-                          </div>
-                          <div className="space-y-0.5 overflow-hidden">
-                             <h4 className="font-black text-lg tracking-tight truncate group-hover:text-rose-500 transition-colors" style={{ color: 'var(--primary-deep)' }}>
-                                {f.email.split('@')[0]}
-                             </h4>
-                             <p className="text-[9px] font-black tracking-[0.2em] opacity-30 uppercase font-mono">{f.uniqueId}</p>
-                          </div>
-                       </div>
+                    {f.status === "blocked_by_other" ? (
+                      <div className="flex flex-col items-center justify-center text-center gap-4 py-8 relative">
+                        <div className="w-16 h-16 rounded-3xl glass flex items-center justify-center border shadow-inner" style={{ borderColor: 'var(--border-glass-strong)' }}>
+                          <Ban className="w-8 h-8 text-rose-500 opacity-20" />
+                        </div>
+                        <div>
+                          <h4 className="font-bold text-lg tracking-tight" style={{ color: 'var(--primary-deep)' }}>Sanctuary Access Locked</h4>
+                          <p className="text-[10px] font-medium opacity-40 mt-2 leading-relaxed px-4 max-w-[200px] mx-auto">
+                            Oops... you no longer have access to this private sanctuary. 🔒
+                          </p>
+                        </div>
+                        <div className="mt-4 px-4 py-1.5 rounded-full glass text-[8px] font-black uppercase tracking-widest text-rose-500 border shadow-sm transition-all group-hover:bg-rose-500 group-hover:text-white" style={{ borderColor: 'var(--border-glass-strong)' }}>
+                          Account Restricted
+                        </div>
+                      </div>
+                    ) : (
+                      <>
+                        {/* Top: Avatar & Identity */}
+                        <div className="flex items-center justify-between gap-4 relative z-10 w-full">
+                           <div className="flex items-center gap-4 flex-1 min-w-0">
+                              <div className="w-14 h-14 rounded-2xl bg-white flex items-center justify-center shadow-lg relative border border-rose-50/50 group-hover:scale-105 group-hover:rotate-3 transition-transform duration-500 shrink-0">
+                                  <User className="w-7 h-7 opacity-10" />
+                                  <div className="absolute -top-1 -right-1 w-3.5 h-3.5 rounded-full bg-green-500 border-[3px] border-white shadow-sm" />
+                              </div>
+                              <div className="space-y-0.5 overflow-hidden">
+                                 <h4 className="font-black text-lg tracking-tight truncate group-hover:text-rose-500 transition-colors" style={{ color: 'var(--primary-deep)' }}>
+                                    {f.email.split('@')[0]}
+                                 </h4>
+                                 <p className="text-[9px] font-black tracking-[0.2em] opacity-30 uppercase font-mono">{f.uniqueId}</p>
+                              </div>
+                           </div>
 
-                       <div className="flex items-center gap-2">
-                          <Link href="/timeline" className="w-10 h-10 rounded-xl glass border flex items-center justify-center shadow-md hover:bg-indigo-500 hover:text-white transition-all group/clk" style={{ borderColor: 'var(--border-glass)' }}>
-                             <Clock className="w-4.5 h-4.5 opacity-40 group-hover/clk:opacity-100" />
-                          </Link>
-                       </div>
-                    </div>
+                           <div className="flex items-center gap-2">
+                              <Link href="/timeline" className="w-10 h-10 rounded-xl glass border flex items-center justify-center shadow-md hover:bg-slate-800 hover:text-white transition-all group/clk" style={{ borderColor: 'var(--border-glass)' }}>
+                                 <Clock className="w-4.5 h-4.5 opacity-40 group-hover/clk:opacity-100" />
+                              </Link>
+                              
+                              <button 
+                                onClick={() => { 
+                                  confirm({
+                                    title: "Block Connection?",
+                                    message: "Are you sure you want to block this member? This action is permanent. 🔒",
+                                    confirmText: "Block Member",
+                                    type: "danger",
+                                    onConfirm: () => {
+                                      blockFriend({ friendshipId: f.friendshipId, userId: userId! });
+                                      toast("Connection blocked successfully", "success");
+                                    }
+                                  });
+                                }}
+                                className="w-10 h-10 rounded-xl glass border flex items-center justify-center shadow-md hover:bg-rose-600 hover:text-white transition-all group/blk" style={{ borderColor: 'var(--border-glass)' }}>
+                                 <Ban className="w-4 h-4 opacity-40 group-hover/blk:opacity-100" />
+                              </button>
 
-                    {/* Bottom: Access Management Dashboard */}
-                    <div className="relative z-10 pt-5 border-t" style={{ borderColor: 'var(--border-glass)' }}>
-                       <div className="flex items-center justify-between mb-4">
-                          <p className="text-[10px] font-black uppercase tracking-widest opacity-40">Their Access Level</p>
-                          <label className="flex items-center gap-2 cursor-pointer group/toggle">
-                             <input 
-                               type="checkbox" 
-                               checked={f.friendAccessToMe.includes("all")} 
-                               onChange={(e) => updateAccess({ userId: userId!, friendshipId: f.friendshipId, access: e.target.checked ? ["all"] : ["memories", "timeline", "events"] })}
-                               className="hidden" 
-                             />
-                             <div className={`w-8 h-4 rounded-full relative transition-all ${f.friendAccessToMe.includes("all") ? 'bg-indigo-500' : 'bg-gray-200'}`}>
-                                <div className={`absolute top-0.5 left-0.5 w-3 h-3 bg-white rounded-full transition-all ${f.friendAccessToMe.includes("all") ? 'translate-x-4' : ''}`} />
-                             </div>
-                             <span className="text-[9px] font-black uppercase tracking-widest opacity-40 group-hover/toggle:opacity-100">ALL</span>
-                          </label>
-                       </div>
+                              <button 
+                                 onClick={() => { 
+                                   confirm({
+                                    title: "Remove Friend?",
+                                    message: "End this sanctuary connection? You can re-invite them later if you change your mind. 🏃‍♂️",
+                                    confirmText: "Remove Connection",
+                                    type: "danger",
+                                    onConfirm: () => {
+                                      removeFriend({ friendshipId: f.friendshipId });
+                                      toast("Friend removed from circle", "info");
+                                    }
+                                  });
+                                 }}
+                                 className="w-10 h-10 rounded-xl glass border flex items-center justify-center shadow-md hover:bg-rose-500 hover:text-white transition-all group/rmv" style={{ borderColor: 'var(--border-glass)' }}>
+                                 <UserMinus className="w-4 h-4 opacity-40 group-hover/rmv:opacity-100" />
+                              </button>
+                           </div>
+                        </div>
 
-                       <div className="flex gap-2">
-                          <AccessButton 
-                             active={f.friendAccessToMe.includes("memories") || f.friendAccessToMe.includes("all")} 
-                             icon={Heart} label="Memories"
-                             onClick={() => {
-                                if (f.friendAccessToMe.includes("all")) return;
-                                const current = f.friendAccessToMe.filter((a: string) => a !== "all");
-                                const next = current.includes("memories") ? current.filter((a: string) => a !== "memories") : [...current, "memories"];
-                                updateAccess({ userId: userId!, friendshipId: f.friendshipId, access: next });
-                             }}
-                          />
-                          <AccessButton 
-                             active={f.friendAccessToMe.includes("timeline") || f.friendAccessToMe.includes("all")} 
-                             icon={Users} label="Timeline"
-                             onClick={() => {
-                                if (f.friendAccessToMe.includes("all")) return;
-                                const current = f.friendAccessToMe.filter((a: string) => a !== "all");
-                                const next = current.includes("timeline") ? current.filter((a: string) => a !== "timeline") : [...current, "timeline"];
-                                updateAccess({ userId: userId!, friendshipId: f.friendshipId, access: next });
-                             }}
-                          />
-                          <AccessButton 
-                             active={f.friendAccessToMe.includes("events") || f.friendAccessToMe.includes("all")} 
-                             icon={Clock} label="Events"
-                             onClick={() => {
-                                if (f.friendAccessToMe.includes("all")) return;
-                                const current = f.friendAccessToMe.filter((a: string) => a !== "all");
-                                const next = current.includes("events") ? current.filter((a: string) => a !== "events") : [...current, "events"];
-                                updateAccess({ userId: userId!, friendshipId: f.friendshipId, access: next });
-                             }}
-                          />
-                       </div>
-                    </div>
+                        {/* Bottom: Access Management Dashboard */}
+                        <div className="relative z-10 pt-5 border-t" style={{ borderColor: 'var(--border-glass)' }}>
+                           <div className="flex items-center justify-between mb-4">
+                              <p className="text-[10px] font-black uppercase tracking-widest opacity-40">Their Access Level</p>
+                              <label className="flex items-center gap-2 cursor-pointer group/toggle">
+                                 <input 
+                                   type="checkbox" 
+                                   checked={f.friendAccessToMe.includes("all")} 
+                                   onChange={(e) => updateAccess({ userId: userId!, friendshipId: f.friendshipId, access: e.target.checked ? ["all"] : ["memories", "timeline", "events"] })}
+                                   className="hidden" 
+                                 />
+                                 <div className={`w-8 h-4 rounded-full relative transition-all ${f.friendAccessToMe.includes("all") ? 'bg-indigo-500' : 'bg-gray-200'}`}>
+                                    <div className={`absolute top-0.5 left-0.5 w-3 h-3 bg-white rounded-full transition-all ${f.friendAccessToMe.includes("all") ? 'translate-x-4' : ''}`} />
+                                 </div>
+                                 <span className="text-[9px] font-black uppercase tracking-widest opacity-40 group-hover/toggle:opacity-100">ALL</span>
+                              </label>
+                           </div>
+
+                           <div className="flex gap-2">
+                              <AccessButton 
+                                 active={f.friendAccessToMe.includes("memories") || f.friendAccessToMe.includes("all")} 
+                                 icon={Heart} label="Memories"
+                                 onClick={() => {
+                                    if (f.friendAccessToMe.includes("all")) return;
+                                    const current = f.friendAccessToMe.filter((a: string) => a !== "all");
+                                    const next = current.includes("memories") ? current.filter((a: string) => a !== "memories") : [...current, "memories"];
+                                    updateAccess({ userId: userId!, friendshipId: f.friendshipId, access: next });
+                                 }}
+                              />
+                              <AccessButton 
+                                 active={f.friendAccessToMe.includes("timeline") || f.friendAccessToMe.includes("all")} 
+                                 icon={Users} label="Timeline"
+                                 onClick={() => {
+                                    if (f.friendAccessToMe.includes("all")) return;
+                                    const current = f.friendAccessToMe.filter((a: string) => a !== "all");
+                                    const next = current.includes("timeline") ? current.filter((a: string) => a !== "timeline") : [...current, "timeline"];
+                                    updateAccess({ userId: userId!, friendshipId: f.friendshipId, access: next });
+                                 }}
+                              />
+                              <AccessButton 
+                                 active={f.friendAccessToMe.includes("events") || f.friendAccessToMe.includes("all")} 
+                                 icon={Clock} label="Events"
+                                 onClick={() => {
+                                    if (f.friendAccessToMe.includes("all")) return;
+                                    const current = f.friendAccessToMe.filter((a: string) => a !== "all");
+                                    const next = current.includes("events") ? current.filter((a: string) => a !== "events") : [...current, "events"];
+                                    updateAccess({ userId: userId!, friendshipId: f.friendshipId, access: next });
+                                 }}
+                              />
+                           </div>
+                        </div>
+                      </>
+                    )}
 
                     {/* Background Glow Effect */}
                     <div className="absolute -bottom-10 -right-10 w-24 h-24 bg-primary/5 blur-3xl opacity-0 group-hover:opacity-100 transition-opacity" />
@@ -306,6 +354,55 @@ export default function FriendsPage() {
             </div>
           )}
         </div>
+
+        {/* Blocked Members Management Section */}
+        <AnimatePresence>
+          {blocked.length > 0 && (
+            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="mt-24 pt-16 border-t" style={{ borderColor: 'var(--border-glass)' }}>
+              <div className="flex items-center gap-4 mb-8">
+                 <div className="w-10 h-10 rounded-2xl glass flex items-center justify-center shadow-sm" style={{ borderColor: 'var(--border-glass)' }}>
+                    <Ban className="w-5 h-5 text-rose-600" />
+                 </div>
+                 <div>
+                   <h3 className="text-2xl font-bold tracking-tight" style={{ fontFamily: "var(--font-serif)", color: "var(--primary-deep)" }}>Blocked Sanctuary Members</h3>
+                   <p className="text-[10px] font-black uppercase tracking-widest opacity-40 mt-0.5">Manage restricted access</p>
+                 </div>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {blocked.map((b: any) => (
+                  <div key={b.friendshipId} className="glass-strong rounded-[28px] p-5 border flex items-center justify-between group grayscale hover:grayscale-0 transition-all opacity-80 hover:opacity-100" style={{ borderColor: 'var(--border-glass-strong)' }}>
+                    <div className="flex items-center gap-4">
+                      <div className="w-12 h-12 rounded-xl glass flex items-center justify-center shrink-0">
+                         <Ban className="w-5 h-5 opacity-20 text-rose-500" />
+                      </div>
+                      <div className="overflow-hidden">
+                         <h4 className="font-bold truncate text-[var(--text-main)] text-base">{b.email.split('@')[0]}</h4>
+                         <p className="text-[8px] opacity-40 font-mono tracking-widest uppercase font-black">{b.uniqueId}</p>
+                      </div>
+                    </div>
+                    <button 
+                      onClick={() => {
+                        confirm({
+                          title: "Unblock Friend?",
+                          message: "Restore access for this person? They will be able to see your shared sanctuary again. ✨",
+                          confirmText: "Unblock Member",
+                          onConfirm: () => {
+                            unblockFriend({ friendshipId: b.friendshipId, userId: userId! });
+                            toast(`Unblocked ${b.email.split('@')[0]}`, "success");
+                          }
+                        });
+                      }}
+                      className="px-4 h-10 rounded-xl glass border font-black text-[9px] uppercase tracking-widest transition-all shadow-sm hover:opacity-80"
+                      style={{ borderColor: 'var(--border-glass-strong)', color: 'var(--primary)' }}
+                    >
+                      Unblock
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
       <Footer minimal />
     </main>
@@ -316,11 +413,11 @@ function AccessButton({ active, icon: Icon, label, onClick }: any) {
   return (
     <button 
       onClick={onClick}
-      className={`flex-1 flex flex-col items-center gap-2 p-3 rounded-2xl border transition-all ${active ? 'bg-white shadow-md' : 'opacity-40 grayscale hover:grayscale-0 hover:opacity-100 bg-white/20'}`}
-      style={{ borderColor: active ? 'var(--primary-soft)' : 'transparent' }}
+      className={`flex-1 flex flex-col items-center gap-2 p-3 rounded-2xl border transition-all ${active ? 'glass shadow-md opacity-100' : 'opacity-40 grayscale hover:grayscale-0 hover:opacity-100 bg-white/5'}`}
+      style={{ borderColor: active ? 'var(--primary)' : 'transparent' }}
     >
-       <Icon className={`w-4 h-4 ${active ? 'text-rose-500' : 'text-gray-400'}`} />
-       <span className="text-[8px] font-black uppercase tracking-widest">{label}</span>
+       <Icon className={`w-4 h-4 ${active ? '' : 'text-gray-400'}`} style={{ color: active ? 'var(--primary)' : undefined }} />
+       <span className="text-[8px] font-black uppercase tracking-widest" style={{ color: active ? 'var(--text-main)' : 'var(--text-light)' }}>{label}</span>
     </button>
   );
 }
