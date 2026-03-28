@@ -1,23 +1,25 @@
 "use client";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
-import { Calendar, Bell, Trash2, Plus, X, Clock, PartyPopper, Heart, Users } from "lucide-react";
+import { Calendar, Bell, Trash2, Plus, X, Clock, PartyPopper, Heart, Users, Check, XCircle, UserPlus } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useAuth } from "@/components/AuthProvider";
 import { motion, AnimatePresence } from "framer-motion";
 
 const EVENT_TYPES = [
-  { value: "birthday",   label: "Birthday",    emoji: "🎂" },
-  { value: "anniversary",label: "Anniversary", emoji: "💑" },
-  { value: "trip",       label: "Trip/Date",   emoji: "✈️" },
-  { value: "other",      label: "Other",       emoji: "✨" },
+  { value: "birthday", label: "Birthday", emoji: "🎂" },
+  { value: "anniversary", label: "Anniversary", emoji: "💑" },
+  { value: "trip", label: "Trip/Date", emoji: "✈️" },
+  { value: "other", label: "Other", emoji: "✨" },
 ];
 
 export default function UpcomingEvents() {
   const { userId } = useAuth();
-  const events = useQuery((api as any).events.list, { userId: userId || undefined });
-  const removeEvent = useMutation((api as any).events.remove);
-  const createEvent = useMutation((api as any).events.create);
+  const events = useQuery(api.events.list, userId ? { userId } : "skip");
+  const friends = useQuery(api.friends.listFriends, userId ? { userId } : "skip");
+
+  const removeEvent = useMutation(api.events.remove);
+  const createEvent = useMutation(api.events.create);
 
   const [showAdd, setShowAdd] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -29,6 +31,7 @@ export default function UpcomingEvents() {
     type: "birthday",
     notes: "",
     visibility: "private",
+    mentionedUserId: "" as any,
   });
 
   useEffect(() => {
@@ -41,9 +44,13 @@ export default function UpcomingEvents() {
     if (!formData.title || !formData.date) return;
     setLoading(true);
     try {
-      await createEvent({ userId: userId!, ...formData });
+      await createEvent({
+        userId: userId!,
+        ...formData,
+        mentionedUserId: formData.mentionedUserId || undefined
+      });
       setShowAdd(false);
-      setFormData({ title: "", date: "", type: "birthday", notes: "", visibility: "private" });
+      setFormData({ title: "", date: "", type: "birthday", notes: "", visibility: "private", mentionedUserId: "" });
     } finally {
       setLoading(false);
     }
@@ -55,8 +62,8 @@ export default function UpcomingEvents() {
 
     if (type === "birthday" || type === "anniversary") {
       eventDate.setFullYear(now.getFullYear());
-      if (eventDate.getTime() < now.getTime() && 
-          (now.getDate() !== eventDate.getDate() || now.getMonth() !== eventDate.getMonth())) {
+      if (eventDate.getTime() < now.getTime() &&
+        (now.getDate() !== eventDate.getDate() || now.getMonth() !== eventDate.getMonth())) {
         eventDate.setFullYear(now.getFullYear() + 1);
       }
     }
@@ -72,19 +79,24 @@ export default function UpcomingEvents() {
     return { days, hours, mins, secs, isToday, total: diff };
   };
 
-  const sortedEvents = (events as any[])?.map((e: any) => ({
+  const allEventsWithTimer = (events as any[])?.map((e: any) => ({
     ...e,
     timer: getDetailedTimeLeft(e.date, e.type)
-  })).sort((a: any, b: any) => a.timer.total - b.timer.total).filter((e: any) => e.timer.total > -86400000).slice(0, 3);
+  })) || [];
+
+  const sortedEvents = allEventsWithTimer
+    .sort((a: any, b: any) => a.timer.total - b.timer.total)
+    .filter((e: any) => e.timer.total > -86400000)
+    .slice(0, 3);
 
   if (!events) return <div className="h-32 shimmer rounded-3xl mb-12" />;
 
   return (
-    <div className="mb-12">
-      <div className="flex items-center justify-between mb-6">
+    <div className="mb-12 relative pb-8">
+      <div className="flex items-center justify-between mb-6 pt-4">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-2xl flex items-center justify-center glass shadow-sm" style={{ border: "1px solid var(--border-glass)" }}>
-             <Bell className="w-5 h-5 animate-swing" style={{ color: "var(--primary)" }} />
+            <Bell className="w-5 h-5 animate-swing" style={{ color: "var(--primary)" }} />
           </div>
           <div>
             <h2 className="text-xl sm:text-2xl font-bold" style={{ fontFamily: "var(--font-serif)", color: "var(--primary-deep)" }}>
@@ -112,25 +124,19 @@ export default function UpcomingEvents() {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
           {sortedEvents?.map((ev: any) => (
             <div key={ev._id} className={`glass-strong group relative p-6 rounded-[32px] transition-all hover:scale-[1.02] border ${ev.timer.isToday ? 'shadow-xl' : ''}`}
-              style={{ 
+              style={{
                 borderColor: ev.timer.isToday ? 'var(--primary)' : 'var(--border-glass)',
                 background: ev.timer.isToday ? 'var(--primary-blush)' : 'var(--bg-glass-strong)'
               }}>
-              
-              <div className="absolute top-4 right-4 flex items-center gap-2">
-                 {ev.visibility === "friends" && (
-                    <div className="flex items-center gap-1.5 px-2 py-1 rounded-lg bg-rose-50 border border-rose-100 shadow-sm">
-                       <Users className="w-3 h-3 text-rose-400" />
-                       <span className="text-[8px] font-black uppercase tracking-tighter text-rose-600">Shared</span>
-                    </div>
-                 )}
-                 {ev.userId === userId && (
-                    <button onClick={() => userId && removeEvent({ id: ev._id, userId })}
-                      className="p-2 rounded-xl opacity-0 group-hover:opacity-100 hover:bg-white/50 transition-all z-10"
-                      style={{ color: "var(--text-light)" }}>
-                      <Trash2 className="w-4 h-4" />
-                    </button>
-                 )}
+
+              <div className="absolute top-4 right-4 flex items-center">
+                {(ev.userId === userId || ev.mentionedUserId === userId) && (
+                  <button onClick={() => userId && removeEvent({ id: ev._id, userId })}
+                    className="p-3 rounded-xl opacity-0 group-hover:opacity-100 hover:bg-rose-500/10 transition-all z-[60] relative"
+                    style={{ color: "var(--text-light)" }}>
+                    <Trash2 className="w-4 h-4 pointer-events-none" />
+                  </button>
+                )}
               </div>
 
               <div className="relative z-10 flex flex-col h-full">
@@ -140,12 +146,20 @@ export default function UpcomingEvents() {
                     {EVENT_TYPES.find(t => t.value === ev.type)?.emoji || "✨"}
                   </div>
                   <div className="flex-1 min-w-0 pt-1">
-                    <h3 className="font-bold truncate text-lg" style={{ color: "var(--primary-deep)" }}>
-                      {ev.title}
-                    </h3>
+                    <div className="flex items-center gap-2 mb-1">
+                      <h3 className="font-bold truncate text-lg leading-tight" style={{ color: "var(--primary-deep)" }}>
+                        {ev.title}
+                      </h3>
+                      {(ev.visibility === "friends" || ev.approvalStatus === "approved") && (
+                        <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-lg bg-rose-50/80 border border-rose-100/50 backdrop-blur-sm shrink-0">
+                          <Users className="w-2.5 h-2.5 text-rose-400" />
+                          <span className="text-[7px] font-black uppercase tracking-[0.1em] text-rose-600">Shared</span>
+                        </div>
+                      )}
+                    </div>
                     <div className="flex items-center gap-1.5 mt-1 text-xs font-bold uppercase tracking-widest opacity-40" style={{ color: "var(--text-muted)" }}>
                       <Calendar className="w-3.5 h-3.5" />
-                      {new Date(ev.date).toLocaleDateString("en-IN", { day:'numeric', month:'short', year:'numeric'})}
+                      {new Date(ev.date).toLocaleDateString("en-IN", { day: 'numeric', month: 'short', year: 'numeric' })}
                     </div>
                   </div>
                 </div>
@@ -159,10 +173,10 @@ export default function UpcomingEvents() {
                     </div>
                   ) : (
                     <div className="grid grid-cols-4 gap-2 text-center">
-                      <TimerUnit value={ev.timer.days}  label="Days"  color="var(--primary)" />
-                      <TimerUnit value={ev.timer.hours} label="Hrs"   color="var(--text-main)" />
-                      <TimerUnit value={ev.timer.mins}  label="Mins"  color="var(--text-main)" />
-                      <TimerUnit value={ev.timer.secs}  label="Secs"  color="var(--text-main)" />
+                      <TimerUnit value={ev.timer.days} label="Days" color="var(--primary)" />
+                      <TimerUnit value={ev.timer.hours} label="Hrs" color="var(--text-main)" />
+                      <TimerUnit value={ev.timer.mins} label="Mins" color="var(--text-main)" />
+                      <TimerUnit value={ev.timer.secs} label="Secs" color="var(--text-main)" />
                     </div>
                   )}
                 </div>
@@ -175,69 +189,84 @@ export default function UpcomingEvents() {
       {/* Add Event Modal */}
       <AnimatePresence>
         {showAdd && (
-          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/20 backdrop-blur-md">
-            <motion.div 
-               initial={{ opacity: 0, scale: 0.9, y: 20 }}
-               animate={{ opacity: 1, scale: 1, y: 0 }}
-               exit={{ opacity: 0, scale: 0.9, y: 20 }}
-               className="glass-strong w-full max-w-md rounded-[32px] overflow-hidden shadow-2xl border"
-               style={{ borderColor: "var(--border-glass-strong)" }}
+          <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/30 backdrop-blur-xl">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.9, y: 20 }}
+              className="glass-strong w-full max-w-lg rounded-[40px] overflow-hidden shadow-2xl border bg-white"
+              style={{ borderColor: "var(--border-glass-strong)" }}
             >
-              <div className="p-6 border-b flex items-center justify-between" style={{ borderColor: "var(--border-glass-strong)" }}>
-                <h3 className="text-xl font-bold flex items-center gap-2" style={{ fontFamily: "var(--font-serif)", color: "var(--primary-deep)" }}>
-                  <Clock className="w-5 h-5" style={{ color: "var(--primary)" }} /> Schedule Moment
-                </h3>
-                <button onClick={() => setShowAdd(false)} className="p-2 rounded-full hover:bg-white/50 transition-colors" style={{ color: "var(--text-light)" }}>
-                   <X className="w-5 h-5" />
+              <div className="p-8 border-b flex items-center justify-between" style={{ borderColor: "var(--border-glass-strong)" }}>
+                <h2 className="text-2xl font-bold flex items-center gap-3" style={{ fontFamily: "var(--font-serif)", color: "var(--primary-deep)" }}>
+                  <Clock className="w-6 h-6" style={{ color: "var(--primary)" }} /> Schedule Moment
+                </h2>
+                <button onClick={() => setShowAdd(false)} className="p-2.5 rounded-full hover:bg-black/5 transition-colors" style={{ color: "var(--text-light)" }}>
+                  <X className="w-6 h-6" />
                 </button>
               </div>
-              <form onSubmit={handleAdd} className="p-8 space-y-5">
+              <form onSubmit={handleAdd} className="p-8 space-y-6">
                 <div>
-                  <label className="block text-[10px] font-bold uppercase tracking-widest opacity-40 mb-2 ml-1" style={{ color: "var(--text-main)" }}>Event Title</label>
-                  <input required className="input-rose" placeholder="e.g. Our Anniversary 💑" 
-                    value={formData.title} onChange={e => setFormData({...formData, title: e.target.value})} />
+                  <label className="block text-[10px] font-black uppercase tracking-widest opacity-40 mb-2 ml-1" style={{ color: "var(--text-main)" }}>What are we celebrating?</label>
+                  <input required className="input-rose text-lg" placeholder="e.g. Our Anniversary 💑"
+                    value={formData.title} onChange={e => setFormData({ ...formData, title: e.target.value })} />
                 </div>
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-2 gap-5">
                   <div>
-                    <label className="block text-[10px] font-bold uppercase tracking-widest opacity-40 mb-2 ml-1" style={{ color: "var(--text-main)" }}>Date</label>
-                    <input required type="date" className="input-rose" 
-                      value={formData.date} onChange={e => setFormData({...formData, date: e.target.value})} />
+                    <label className="block text-[10px] font-black uppercase tracking-widest opacity-40 mb-2 ml-1" style={{ color: "var(--text-main)" }}>When?</label>
+                    <input required type="date" className="input-rose"
+                      value={formData.date} onChange={e => setFormData({ ...formData, date: e.target.value })} />
                   </div>
                   <div>
-                    <label className="block text-[10px] font-bold uppercase tracking-widest opacity-40 mb-2 ml-1" style={{ color: "var(--text-main)" }}>Event Type</label>
+                    <label className="block text-[10px] font-black uppercase tracking-widest opacity-40 mb-2 ml-1" style={{ color: "var(--text-main)" }}>Vibe</label>
                     <div className="relative">
-                      <select className="input-rose pr-8 appearance-none" 
-                        value={formData.type} onChange={e => setFormData({...formData, type: e.target.value})}>
+                      <select className="input-rose pr-10 appearance-none bg-transparent"
+                        value={formData.type} onChange={e => setFormData({ ...formData, type: e.target.value })}>
                         {EVENT_TYPES.map(t => <option key={t.value} value={t.value}>{t.emoji} {t.label}</option>)}
                       </select>
-                      <ChevronDownIcon className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 opacity-40 pointer-events-none" />
+                      <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none opacity-40">
+                        <Clock className="w-4 h-4" />
+                      </div>
                     </div>
                   </div>
                 </div>
+
+                {/* Mention a Friend */}
                 <div>
-                   <label className="block text-[10px] font-bold uppercase tracking-widest opacity-40 mb-3 ml-1" style={{ color: "var(--text-main)" }}>Privacy & Sharing</label>
-                   <div className="flex gap-3">
-                      <button type="button" 
-                        onClick={() => setFormData({...formData, visibility: "private"})}
-                        className={`flex-1 flex flex-col items-center gap-2 p-4 rounded-2xl border-2 transition-all ${formData.visibility === "private" ? 'border-rose-500 bg-rose-50 ring-4 ring-rose-500/10' : 'border-black/5 hover:border-black/10'}`}>
-                         <Heart className={`w-5 h-5 ${formData.visibility === "private" ? 'text-rose-500' : 'opacity-20'}`} />
-                         <span className="text-[10px] font-black uppercase tracking-widest opacity-60">Private</span>
-                      </button>
-                      <button type="button" 
-                        onClick={() => setFormData({...formData, visibility: "friends"})}
-                        className={`flex-1 flex flex-col items-center gap-2 p-4 rounded-2xl border-2 transition-all ${formData.visibility === "friends" ? 'border-indigo-500 bg-indigo-50 ring-4 ring-indigo-500/10' : 'border-black/5 hover:border-black/10'}`}>
-                         <Users className={`w-5 h-5 ${formData.visibility === "friends" ? 'text-indigo-500' : 'opacity-20'}`} />
-                         <span className="text-[10px] font-black uppercase tracking-widest opacity-60">Friends</span>
-                      </button>
-                   </div>
+                  <label className="block text-[10px] font-black uppercase tracking-widest opacity-40 mb-3 ml-1" style={{ color: "var(--text-main)" }}>Share with Someone Special?</label>
+                  <select
+                    className="input-rose"
+                    value={formData.mentionedUserId}
+                    onChange={(e) => setFormData({ ...formData, mentionedUserId: e.target.value })}
+                  >
+                    <option value="">Just me</option>
+                    {friends?.map((f: any) => (
+                      <option key={f._id} value={f._id}>✨ Mention: {f.email.split('@')[0]}</option>
+                    ))}
+                  </select>
+                  <p className="text-[9px] font-medium opacity-40 mt-1.5 px-1 leading-relaxed">Mentioned friends will need to approve this before it appears on their timeline.</p>
                 </div>
+
                 <div>
-                  <label className="block text-[10px] font-bold uppercase tracking-widest opacity-40 mb-2 ml-1" style={{ color: "var(--text-main)" }}>Private Notes</label>
-                  <textarea className="input-rose min-h-[80px] resize-none" placeholder="Surprise plan or notes for each other..." 
-                    value={formData.notes} onChange={e => setFormData({...formData, notes: e.target.value})} />
+                  <label className="block text-[10px] font-black uppercase tracking-widest opacity-40 mb-3 ml-1" style={{ color: "var(--text-main)" }}>Who else can see this?</label>
+                  <div className="flex gap-4">
+                    <button type="button"
+                      onClick={() => setFormData({ ...formData, visibility: "private" })}
+                      className={`flex-1 flex items-center justify-center gap-3 p-4 rounded-2xl border-2 transition-all ${formData.visibility === "private" ? 'border-rose-500 bg-rose-50 shadow-md' : 'border-black/5'}`}>
+                      <Heart className={`w-5 h-5 ${formData.visibility === "private" ? 'text-rose-500 fill-current' : 'opacity-20'}`} />
+                      <span className="text-[10px] font-black uppercase tracking-widest">Private</span>
+                    </button>
+                    <button type="button"
+                      onClick={() => setFormData({ ...formData, visibility: "friends" })}
+                      className={`flex-1 flex items-center justify-center gap-3 p-4 rounded-2xl border-2 transition-all ${formData.visibility === "friends" ? 'border-indigo-500 bg-indigo-50 shadow-md' : 'border-black/5'}`}>
+                      <Users className={`w-5 h-5 ${formData.visibility === "friends" ? 'text-indigo-500' : 'opacity-20'}`} />
+                      <span className="text-[10px] font-black uppercase tracking-widest">Friends</span>
+                    </button>
+                  </div>
                 </div>
+
                 <button type="submit" disabled={loading}
-                  className="btn-primary w-full py-4 mt-4 rounded-2xl justify-center font-bold text-base shadow-xl">
+                  className="btn-primary w-full py-5 mt-4 rounded-3xl justify-center font-bold text-lg shadow-xl hover:scale-[1.02] active:scale-[0.98]">
                   {loading ? "Scheduling..." : "Create Moment ❤️"}
                 </button>
               </form>
@@ -255,11 +284,5 @@ function TimerUnit({ value, label, color }: { value: number; label: string; colo
       <span className="text-xl font-bold leading-none" style={{ color }}>{value.toString().padStart(2, '0')}</span>
       <span className="text-[10px] uppercase font-bold tracking-tighter opacity-40 mt-1" style={{ color: "var(--text-muted)" }}>{label}</span>
     </div>
-  );
-}
-
-function ChevronDownIcon(props: any) {
-  return (
-    <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m6 9 6 6 6-6"/></svg>
   );
 }

@@ -33,6 +33,8 @@ export const sendRequest = mutation({
       user1Id: args.userId,
       user2Id: friend._id,
       status: "pending",
+      user1Access: ["all"],
+      user2Access: ["all"],
       createdAt: Date.now(),
     });
   },
@@ -42,6 +44,22 @@ export const acceptRequest = mutation({
   args: { friendshipId: v.id("friendships") },
   handler: async (ctx, args) => {
     await ctx.db.patch(args.friendshipId, { status: "accepted" });
+  },
+});
+
+export const updateAccess = mutation({
+  args: { userId: v.id("users"), friendshipId: v.id("friendships"), access: v.array(v.string()) },
+  handler: async (ctx, args) => {
+    const friendship = await ctx.db.get(args.friendshipId);
+    if (!friendship) throw new Error("Friendship not found");
+    
+    if (friendship.user1Id === args.userId) {
+       await ctx.db.patch(args.friendshipId, { user1Access: args.access });
+    } else if (friendship.user2Id === args.userId) {
+       await ctx.db.patch(args.friendshipId, { user2Access: args.access });
+    } else {
+       throw new Error("Unauthorized");
+    }
   },
 });
 
@@ -60,9 +78,15 @@ export const listFriends = query({
 
     const friendsList = [];
     for (const f of friendships) {
-      const friendId = f.user1Id === args.userId ? f.user2Id : f.user1Id;
+      const isUser1 = f.user1Id === args.userId;
+      const friendId = isUser1 ? f.user2Id : f.user1Id;
       const friend = await ctx.db.get(friendId);
-      if (friend) friendsList.push({ ...friend, friendshipId: f._id });
+      if (friend) friendsList.push({ 
+        ...friend, 
+        friendshipId: f._id, 
+        myAccessToFriend: isUser1 ? (f.user2Access || ["all"]) : (f.user1Access || ["all"]),
+        friendAccessToMe: isUser1 ? (f.user1Access || ["all"]) : (f.user2Access || ["all"])
+      });
     }
     return friendsList;
   },

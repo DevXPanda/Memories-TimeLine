@@ -6,9 +6,9 @@ import { Id } from "@/convex/_generated/dataModel";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import ProtectedRoute from "@/components/ProtectedRoute";
-import { 
-  Heart, MapPin, Calendar, Clock, Tag, Sparkles, 
-  ArrowLeft, Edit2, Trash2, Hash, X, ZoomIn 
+import {
+  Heart, MapPin, Calendar, Clock, Tag, Sparkles,
+  ArrowLeft, Edit2, Trash2, Hash, X, ZoomIn
 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -21,33 +21,17 @@ import { useAuth } from "@/components/AuthProvider";
 export default function MemoryDetailPage({ params }: { params: { id: string } }) {
   const { userId } = useAuth();
   const router = useRouter();
-  const memory = useQuery(api.memories.getById, { 
-    id: params.id as Id<"memories">, 
-    userId: userId || undefined 
+  const memory = useQuery(api.memories.getById, {
+    id: params.id as Id<"memories">,
+    userId: userId || undefined
   });
   const toggleFav = useMutation(api.memories.toggleFavorite);
   const removeFn = useMutation(api.memories.remove);
-  
+
   const [deleting, setDeleting] = useState(false);
   const [showLightbox, setShowLightbox] = useState(false);
 
-  if (memory === undefined) {
-    return (
-      <div className="min-h-screen">
-        <Navbar />
-        <main className="px-4 py-8 max-w-4xl mx-auto">
-          <div className="glass-strong rounded-[40px] overflow-hidden animate-pulse">
-            <div className="h-[400px] shimmer" />
-            <div className="p-10 space-y-6">
-              {[...Array(4)].map((_, i) => (
-                <div key={i} className={`h-4 rounded-xl shimmer ${i === 0 ? "w-3/4" : i === 1 ? "w-1/2" : "w-full"}`} />
-              ))}
-            </div>
-          </div>
-        </main>
-      </div>
-    );
-  }
+  if (memory === undefined) return null;
 
   if (!memory && userId) {
     return (
@@ -57,7 +41,6 @@ export default function MemoryDetailPage({ params }: { params: { id: string } })
           <div className="text-center glass-strong p-16 rounded-[48px] border max-w-lg shadow-2xl" style={{ borderColor: "var(--border-glass)" }}>
             <p className="text-8xl mb-10 animate-float">💔</p>
             <h2 className="text-3xl font-bold mb-4" style={{ fontFamily: "var(--font-serif)", color: "var(--primary-deep)" }}>Moment Not Found</h2>
-            <p className="mb-10 text-sm opacity-60 font-medium leading-relaxed" style={{ color: "var(--text-muted)" }}>This beautiful moment seems to have slipped away, or perhaps it&apos;s a private secret between hearts.</p>
             <Link href="/" className="btn-primary px-10 py-4 shadow-xl">Back to Sanctuary</Link>
           </div>
         </main>
@@ -69,7 +52,7 @@ export default function MemoryDetailPage({ params }: { params: { id: string } })
 
   const handleDelete = async () => {
     if (!userId || !memory) return;
-    if (!confirm("Delete this memory forever? ❤️‍🩹 Once gone, it remains only in your hearts.")) return;
+    if (!confirm("Delete this memory forever? ❤️‍🩹")) return;
     setDeleting(true);
     await removeFn({ id: memory._id, userId });
     router.push("/");
@@ -78,155 +61,126 @@ export default function MemoryDetailPage({ params }: { params: { id: string } })
   return (
     <ProtectedRoute>
       <Navbar />
-      <main className="min-h-screen px-4 py-8 max-w-4xl mx-auto pb-32">
+      <main className="min-h-screen px-4 py-8 max-w-6xl mx-auto pb-32">
         <Link href="/" className="inline-flex items-center gap-2 text-[10px] font-black uppercase tracking-widest mb-10 px-4 py-2 rounded-xl glass border group hover:shadow-md transition-all"
           style={{ color: "var(--primary)", borderColor: "var(--border-glass)" }}>
           <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" /> Back to History
         </Link>
 
         {memory && (
-          <article className="glass-strong rounded-[48px] overflow-hidden border shadow-[0_40px_100px_rgba(0,0,0,0.1)] bg-white" style={{ borderColor: "var(--border-glass)" }}>
-            {memory.imageUrl ? (
-              <div className="relative w-full h-[400px] sm:h-[600px] overflow-hidden group">
-                <img src={memory.imageUrl} alt={memory.title} 
-                  className="w-full h-full object-cover transition-transform duration-[2000ms] group-hover:scale-110" />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-90" />
-                
-                <div className="absolute top-8 right-8 flex gap-4">
-                   <button onClick={() => setShowLightbox(true)}
-                      className="w-14 h-14 rounded-2xl flex items-center justify-center glass backdrop-blur-xl shadow-2xl border border-white/20 text-white hover:scale-110 transition-transform">
-                      <ZoomIn className="w-6 h-6" />
-                   </button>
-                   <button onClick={() => userId && toggleFav({ id: memory._id, userId })}
-                      className="w-14 h-14 rounded-2xl flex items-center justify-center glass backdrop-blur-xl shadow-2xl border border-white/20 hover:scale-110 transition-transform"
-                      style={{ color: memory.isFavorite ? "#f43f5e" : "white" }}>
-                      <Heart className={`w-6 h-6 ${memory.isFavorite ? "fill-current" : ""}`} />
-                   </button>
-                </div>
+          <article className="glass-strong rounded-[48px] overflow-hidden border shadow-2xl bg-white flex flex-col md:flex-row md:h-[450px]" style={{ borderColor: "var(--border-glass)" }}>
+            {/* Left side: Immersive Landscape Image */}
+            <div className="md:w-1/2 relative bg-black/5 h-[300px] md:h-full cursor-pointer group flex-shrink-0" onClick={() => memory.imageUrl && setShowLightbox(true)}>
+              {memory.imageUrl ? (
+                <>
+                  <img src={memory.imageUrl} alt={memory.title} className="w-full h-full object-cover" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
 
-                <div className="absolute bottom-0 left-0 right-0 p-10 sm:p-16 text-left">
-                  <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} className="flex flex-col items-start gap-6">
-                    <div className="flex items-center gap-3">
-                       {mood && (
-                          <span className="glass backdrop-blur-xl px-4 py-2 rounded-2xl text-[11px] font-black uppercase tracking-widest shadow-2xl" style={{ color: "white", border: "1px solid rgba(255,255,255,0.2)" }}>
-                            {mood.emoji} {mood.label}
-                          </span>
-                       )}
-                       {memory.category && (
-                          <span className="glass backdrop-blur-xl px-4 py-2 rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] shadow-2xl" style={{ color: "white", border: "1px solid rgba(255,255,255,0.2)" }}>
-                            {memory.category}
-                          </span>
-                       )}
+                  <div className="absolute top-6 left-6">
+                    <button onClick={(e) => { e.stopPropagation(); userId && toggleFav({ id: memory._id, userId }); }}
+                      className="w-10 h-10 rounded-xl flex items-center justify-center glass backdrop-blur-md shadow-lg border border-white/20 text-white">
+                      <Heart className={`w-5 h-5 ${memory.isFavorite ? "fill-current" : ""}`} />
+                    </button>
+                  </div>
+
+                  <div className="absolute bottom-6 left-6 right-6">
+                    <div className="flex flex-wrap items-center gap-2 mb-3">
+                      {mood && (
+                        <span className="px-2 py-0.5 rounded-lg text-[7px] font-black uppercase tracking-widest bg-white/10 backdrop-blur-md border border-white/10 text-white">
+                          {mood.emoji} {mood.label}
+                        </span>
+                      )}
+                      {memory.category && (
+                        <span className="px-2 py-0.5 rounded-lg text-[7px] font-black uppercase tracking-[0.2em] bg-white/10 backdrop-blur-md border border-white/10 text-white">
+                          {memory.category}
+                        </span>
+                      )}
                     </div>
-                    <h1 className="text-4xl sm:text-7xl font-bold text-white leading-tight" style={{ fontFamily: "var(--font-serif)" }}>
+                    <h1 className="text-3xl sm:text-4xl font-bold uppercase tracking-tighter text-white truncate" style={{ fontFamily: "var(--font-serif)" }}>
                       {memory.title}
                     </h1>
-                  </motion.div>
-                </div>
-              </div>
-            ) : (
-              <div className="p-12 sm:p-20 border-b relative overflow-hidden" style={{ background: "var(--primary-blush)", borderColor: "var(--border-glass)" }}>
-                  <div className="absolute top-0 right-0 w-64 h-64 opacity-5 pointer-events-none -mr-32 -mt-32 rounded-full" style={{ background: "var(--primary)" }} />
-                  <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
-                    <h1 className="text-4xl sm:text-7xl font-bold mb-8 relative z-10" style={{ fontFamily: "var(--font-serif)", color: "var(--primary-deep)" }}>
-                      {memory.title}
-                    </h1>
-                    <div className="flex flex-wrap items-center gap-4 relative z-10">
-                       {mood && (
-                          <span className="px-5 py-2 rounded-2xl text-[11px] font-black uppercase tracking-widest glass border shadow-sm" style={{ color: "var(--primary)", borderColor: "var(--border-glass-strong)" }}>
-                            {mood.emoji} {mood.label}
-                          </span>
-                       )}
-                       {memory.category && (
-                          <span className="px-5 py-2 rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] glass border shadow-sm" style={{ color: "var(--text-light)", borderColor: "var(--border-glass-strong)" }}>
-                            {memory.category}
-                          </span>
-                       )}
-                    </div>
-                  </motion.div>
-              </div>
-            )}
+                  </div>
+                </>
+              ) : (
+                <div className="w-full h-full flex items-center justify-center text-8xl" style={{ background: "var(--primary-blush)" }}>✨</div>
+              )}
+            </div>
 
-            <div className="p-10 sm:p-20">
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-8 mb-20">
-                 <MetaInfo icon={<Calendar className="w-5 h-5" />} label="Captured On" value={formatDateFull(memory.date)} />
-                 {memory.time && <MetaInfo icon={<Clock className="w-5 h-5" />} label="Moment Time" value={memory.time} />}
-                 {memory.location && <MetaInfo icon={<MapPin className="w-5 h-5" />} label="LocationSpot" value={memory.location} />}
+            {/* Right side: Compact Content */}
+            <div className="flex-1 p-6 sm:p-10 flex flex-col min-w-0 bg-white overflow-hidden">
+              <div className="mb-4 flex items-center justify-between">
+                <span className="text-[8px] font-black uppercase tracking-[0.2em] opacity-30" style={{ color: "var(--text-main)" }}>
+                  Capturing the Essence
+                </span>
+                <span className="text-[9px] font-black uppercase tracking-widest" style={{ color: "var(--primary)" }}>
+                  {formatDateFull(memory.date)}
+                </span>
               </div>
 
-              <div className="relative mb-20 px-4 text-left">
-                <p className="text-xl sm:text-2xl leading-[1.8] font-medium relative z-10 opacity-80" style={{ color: "var(--text-main)" }}>
+              {/* <div className="flex justify-center mb-6">
+                  <div className="flex flex-col items-center gap-1.5 px-6 py-4 rounded-[28px] glass-strong border shadow-sm w-full max-w-[240px]" style={{ borderColor: "var(--border-glass)" }}>
+                     <div className="w-8 h-8 rounded-xl glass flex items-center justify-center" style={{ color: "var(--primary)" }}>
+                        <Calendar className="w-4 h-4" />
+                     </div>
+                     <p className="text-[10px] font-bold mt-1" style={{ color: "var(--primary-deep)" }}>{formatDateFull(memory.date)}</p>
+                  </div>
+               </div> */}
+
+              <div className="mb-4 overflow-y-auto" style={{ scrollbarWidth: 'none' }}>
+                <p className="text-sm leading-relaxed font-medium opacity-80" style={{ color: "var(--text-main)" }}>
                   {memory.caption}
                 </p>
-                <div className="w-12 h-1 bg-rose-100 mt-10 rounded-full" />
               </div>
 
               {memory.aiCaption && (
-                <motion.div 
-                  initial={{ opacity: 0, scale: 0.98 }}
-                  whileInView={{ opacity: 1, scale: 1 }}
-                  viewport={{ once: true }}
-                  className="rounded-[40px] p-10 sm:p-14 mb-20 relative overflow-hidden text-center shadow-2xl border"
+                <div className="rounded-[24px] p-5 mb-4 relative overflow-hidden shadow-sm border mt-auto"
                   style={{ background: "var(--primary-blush)", borderColor: "var(--border-glass)" }}>
-                  <div className="absolute top-0 left-1/2 -translate-x-1/2 w-48 h-1" style={{ background: "linear-gradient(90deg, transparent, var(--primary), transparent)" }} />
-                  <div className="flex flex-col items-center gap-6 relative z-10">
-                    <div className="w-16 h-16 rounded-[24px] glass flex items-center justify-center shadow-xl border" style={{ color: "var(--primary)", borderColor: "var(--border-glass)" }}>
-                      <Sparkles className="w-8 h-8" />
+                  <div className="flex flex-col gap-1.5 relative z-10">
+                    <div className="flex items-center gap-1.5 opacity-20">
+                      <Sparkles className="w-3 h-3" />
+                      <span className="text-[7px] font-black uppercase tracking-[0.2em]">A Secret Shared</span>
                     </div>
-                    <span className="text-[10px] font-black uppercase tracking-[0.3em] opacity-40" style={{ color: "var(--primary-deep)" }}>
-                      Dil&apos;s Heartfelt Note
-                    </span>
-                    <p className="text-3xl sm:text-4xl italic leading-relaxed"
-                      style={{ fontFamily: "var(--font-script)", color: "var(--primary-deep)" }}>
+                    <p className="text-base italic leading-snug" style={{ fontFamily: "var(--font-script)", color: "var(--primary-deep)" }}>
                       &quot;{memory.aiCaption}&quot;
                     </p>
                   </div>
-                </motion.div>
+                </div>
               )}
 
-              {memory.tags && memory.tags.length > 0 && (
-                <div className="flex flex-wrap gap-3 mb-20">
-                  {memory.tags.map((t: string) => (
-                    <span key={t} className="flex items-center gap-2 text-[10px] px-5 py-2.5 rounded-2xl font-black uppercase tracking-[0.15em] glass border hover:shadow-md transition-all group"
+              <div className="mt-auto pt-4 border-t flex items-center justify-between gap-4" style={{ borderColor: "var(--border-glass)" }}>
+                <div className="flex gap-2">
+                  {memory.tags?.slice(0, 2).map((t: string) => (
+                    <span key={t} className="text-[7px] px-2.5 py-1 rounded-lg font-black uppercase tracking-[0.1em] glass border"
                       style={{ color: "var(--text-light)", borderColor: "var(--border-glass)" }}>
-                      <Hash className="w-3.5 h-3.5 opacity-30 group-hover:scale-125 transition-transform" />{t}
+                      #{t}
                     </span>
                   ))}
                 </div>
-              )}
-
-              <div className="flex items-center justify-between pt-12 border-t flex-wrap gap-6" style={{ borderColor: "var(--border-glass)" }}>
-                <div className="flex items-center gap-4">
-                   <Link href={`/memories/${memory._id}/edit`}
-                     className="btn-ghost h-12 px-8 rounded-2xl text-[10px] font-black uppercase tracking-widest flex items-center gap-2 border hover:glass transition-all"
-                     style={{ borderColor: "var(--border-glass)" }}>
-                     <Edit2 className="w-4 h-4" /> Edit Story
-                   </Link>
+                <div className="flex items-center gap-2">
+                  <Link href={`/memories/${memory._id}/edit`} className="p-2 rounded-xl glass border hover:scale-105" title="Edit Story" style={{ borderColor: "var(--border-glass)", color: "var(--primary)" }}>
+                    <Edit2 className="w-3.5 h-3.5" />
+                  </Link>
+                  <button onClick={handleDelete} className="p-2 rounded-xl glass border hover:scale-105 text-red-400" title="Delete Forever" style={{ borderColor: "var(--border-glass)" }}>
+                    <Trash2 className="w-3.5 h-3.5" />
+                  </button>
                 </div>
-
-                <button onClick={handleDelete} disabled={deleting}
-                  className="flex items-center gap-2 h-12 px-8 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all hover:bg-red-50 text-red-500 hover:scale-105 active:scale-95">
-                  <Trash2 className="w-4 h-4" />
-                  {deleting ? "Removing..." : "Delete Forever"}
-                </button>
               </div>
             </div>
           </article>
         )}
+
+        <RelatedMoments memory={memory} />
       </main>
       <Footer minimal />
+
       <AnimatePresence>
         {showLightbox && memory?.imageUrl && (
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[1000] flex items-center justify-center bg-black/95 backdrop-blur-3xl p-4 sm:p-20" onClick={() => setShowLightbox(false)}>
             <button className="absolute top-10 right-10 p-4 rounded-full bg-white/10 text-white hover:bg-white/20 transition-all z-[1010]">
               <X className="w-10 h-10" />
             </button>
-            <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }} transition={{ type: "spring", damping: 30 }} className="relative max-w-7xl w-full h-full flex items-center justify-center p-4 sm:p-10" onClick={(e) => e.stopPropagation()}>
-              <img src={memory.imageUrl} alt={memory.title} className="max-w-full max-h-full object-contain rounded-3xl shadow-[0_0_150px_rgba(0,0,0,0.5)] border border-white/10" />
-              <div className="absolute bottom-10 left-10 text-white text-left hidden md:block">
-                 <h2 className="text-3xl font-bold mb-2 tracking-tight" style={{ fontFamily: "var(--font-serif)" }}>{memory.title}</h2>
-                 <p className="text-[10px] opacity-40 font-black uppercase tracking-[0.3em]">{formatDateFull(memory.date)}</p>
-              </div>
+            <motion.div initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }} transition={{ type: "spring", damping: 30 }} className="relative w-full h-full flex items-center justify-center" onClick={(e) => e.stopPropagation()}>
+              <img src={memory.imageUrl} alt={memory.title} className="max-w-full max-h-full object-contain rounded-2xl shadow-2xl" />
             </motion.div>
           </motion.div>
         )}
@@ -235,14 +189,40 @@ export default function MemoryDetailPage({ params }: { params: { id: string } })
   );
 }
 
-function MetaInfo({ icon, label, value }: { icon: any; label: string; value: string }) {
+function RelatedMoments({ memory }: { memory: any }) {
+  const { userId } = useAuth();
+  const related = useQuery(api.memories.getByDate, {
+    date: memory?.date || "",
+    userId: userId || undefined,
+    excludeId: memory?._id
+  });
+
+  if (!related || related.length === 0) return null;
+
   return (
-    <div className="flex flex-col gap-3 p-6 rounded-[32px] glass-strong border group hover:shadow-xl transition-all h-full" style={{ borderColor: "var(--border-glass)" }}>
-       <div className="flex items-center gap-2.5 text-[9px] font-black uppercase tracking-widest opacity-40" style={{ color: "var(--text-main)" }}>
-          <div className="w-8 h-8 rounded-xl glass flex items-center justify-center" style={{ color: "var(--primary)" }}>{icon}</div>
-          {label}
-       </div>
-       <div className="text-base font-bold pl-1" style={{ color: "var(--primary-deep)" }}>{value}</div>
-    </div>
+    <motion.section initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} className="mt-12 pt-12 border-t" style={{ borderColor: "var(--border-glass)" }}>
+      <div className="flex items-center gap-3 mb-8">
+        <div className="w-8 h-8 rounded-xl glass flex items-center justify-center shadow-sm" style={{ borderColor: 'var(--border-glass)', color: "var(--primary)" }}>
+          <Calendar className="w-4 h-4" />
+        </div>
+        <h3 className="text-xl font-bold tracking-tight" style={{ fontFamily: "var(--font-serif)", color: "var(--primary-deep)" }}>Shared Hearts</h3>
+      </div>
+      <div className="overflow-x-auto pb-6 -mx-4 px-4" style={{ scrollbarWidth: "none" }}>
+        <div className="flex gap-4 min-w-max">
+          {related.map((m: any) => (
+            <Link key={m._id} href={`/memories/${m._id}`} className="w-[200px] group">
+              <div className="aspect-video rounded-[20px] overflow-hidden border mb-3 relative shadow-sm transition-all group-hover:shadow-lg" style={{ borderColor: "var(--border-glass)" }}>
+                {m.imageUrl ? (
+                  <img src={m.imageUrl} alt={m.title} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
+                ) : (
+                  <div className="w-full h-full glass flex items-center justify-center text-4xl">✨</div>
+                )}
+              </div>
+              <h4 className="font-bold text-xs truncate uppercase tracking-tighter" style={{ fontFamily: "var(--font-serif)", color: "var(--primary-deep)" }}>{m.title}</h4>
+            </Link>
+          ))}
+        </div>
+      </div>
+    </motion.section>
   );
 }

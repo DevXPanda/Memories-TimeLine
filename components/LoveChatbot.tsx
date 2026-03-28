@@ -199,6 +199,7 @@ export default function LoveChatbot() {
         imageStorageId: storageId,
         date: visionData.date || new Date().toISOString().split("T")[0],
         isFavorite: false,
+        visibility: "friends",
       });
       setUploading(false);
       setBusy(false);

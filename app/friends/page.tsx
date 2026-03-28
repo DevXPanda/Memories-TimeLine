@@ -8,6 +8,7 @@ import {
   Search, Copy, Send, Loader2, Sparkles, User, Key, Heart
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import Link from "next/link";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 
@@ -19,6 +20,7 @@ export default function FriendsPage() {
   
   const sendRequest = useMutation(api.friends.sendRequest);
   const acceptRequest = useMutation(api.friends.acceptRequest);
+  const updateAccess = useMutation(api.friends.updateAccess);
 
   const [uidInput, setUidInput] = useState("");
   const [loading, setLoading] = useState(false);
@@ -218,36 +220,88 @@ export default function FriendsPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 text-left">
               {friends.map((f: any, idx: number) => (
                 <motion.div 
-                  key={f._id} 
-                  initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: idx * 0.05 }}
-                  className="glass-strong rounded-[32px] p-5 border group relative overflow-hidden transition-all duration-500 hover:shadow-xl h-[120px] flex items-center justify-between gap-4" 
-                  style={{ borderColor: 'var(--border-glass-strong)' }}
-                >
-                   {/* Left Side: Avatar & Identity */}
-                   <div className="flex items-center gap-4 flex-1 min-w-0 relative z-10">
-                      <div className="w-14 h-14 rounded-2xl bg-white flex items-center justify-center shadow-lg relative border border-rose-50/50 group-hover:scale-105 group-hover:rotate-3 transition-transform duration-500 shrink-0">
-                          <User className="w-7 h-7 opacity-10" />
-                          <div className="absolute -top-1 -right-1 w-3.5 h-3.5 rounded-full bg-green-500 border-[3px] border-white shadow-sm" />
-                      </div>
-                      
-                      <div className="space-y-0.5 overflow-hidden">
-                         <h4 className="font-black text-lg tracking-tight truncate group-hover:text-rose-500 transition-colors" style={{ color: 'var(--primary-deep)' }}>
-                            {f.email.split('@')[0]}
-                         </h4>
-                         <p className="text-[9px] font-black tracking-[0.2em] opacity-30 uppercase font-mono">{f.uniqueId}</p>
-                      </div>
-                   </div>
+                   key={f._id} 
+                   initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: idx * 0.05 }}
+                   className="glass-strong rounded-[32px] p-6 border group relative overflow-hidden transition-all duration-500 hover:shadow-xl h-auto flex flex-col gap-6" 
+                   style={{ borderColor: 'var(--border-glass-strong)' }}
+                 >
+                    {/* Top: Avatar & Identity */}
+                    <div className="flex items-center justify-between gap-4 relative z-10 w-full">
+                       <div className="flex items-center gap-4 flex-1 min-w-0">
+                          <div className="w-14 h-14 rounded-2xl bg-white flex items-center justify-center shadow-lg relative border border-rose-50/50 group-hover:scale-105 group-hover:rotate-3 transition-transform duration-500 shrink-0">
+                              <User className="w-7 h-7 opacity-10" />
+                              <div className="absolute -top-1 -right-1 w-3.5 h-3.5 rounded-full bg-green-500 border-[3px] border-white shadow-sm" />
+                          </div>
+                          <div className="space-y-0.5 overflow-hidden">
+                             <h4 className="font-black text-lg tracking-tight truncate group-hover:text-rose-500 transition-colors" style={{ color: 'var(--primary-deep)' }}>
+                                {f.email.split('@')[0]}
+                             </h4>
+                             <p className="text-[9px] font-black tracking-[0.2em] opacity-30 uppercase font-mono">{f.uniqueId}</p>
+                          </div>
+                       </div>
 
-                   {/* Right Side: Quick Actions */}
-                   <div className="flex items-center gap-2 relative z-10">
-                      <button className="w-10 h-10 rounded-xl glass border flex items-center justify-center shadow-md hover:bg-rose-500 hover:text-white transition-all group/clk" style={{ borderColor: 'var(--border-glass)' }}>
-                         <Clock className="w-4.5 h-4.5 opacity-40 group-hover/clk:opacity-100" />
-                      </button>
-                   </div>
+                       <div className="flex items-center gap-2">
+                          <Link href="/timeline" className="w-10 h-10 rounded-xl glass border flex items-center justify-center shadow-md hover:bg-indigo-500 hover:text-white transition-all group/clk" style={{ borderColor: 'var(--border-glass)' }}>
+                             <Clock className="w-4.5 h-4.5 opacity-40 group-hover/clk:opacity-100" />
+                          </Link>
+                       </div>
+                    </div>
 
-                   {/* Background Glow Effect */}
-                   <div className="absolute -bottom-10 -right-10 w-24 h-24 bg-primary/5 blur-3xl opacity-0 group-hover:opacity-100 transition-opacity" />
-                </motion.div>
+                    {/* Bottom: Access Management Dashboard */}
+                    <div className="relative z-10 pt-5 border-t" style={{ borderColor: 'var(--border-glass)' }}>
+                       <div className="flex items-center justify-between mb-4">
+                          <p className="text-[10px] font-black uppercase tracking-widest opacity-40">Their Access Level</p>
+                          <label className="flex items-center gap-2 cursor-pointer group/toggle">
+                             <input 
+                               type="checkbox" 
+                               checked={f.friendAccessToMe.includes("all")} 
+                               onChange={(e) => updateAccess({ userId: userId!, friendshipId: f.friendshipId, access: e.target.checked ? ["all"] : ["memories", "timeline", "events"] })}
+                               className="hidden" 
+                             />
+                             <div className={`w-8 h-4 rounded-full relative transition-all ${f.friendAccessToMe.includes("all") ? 'bg-indigo-500' : 'bg-gray-200'}`}>
+                                <div className={`absolute top-0.5 left-0.5 w-3 h-3 bg-white rounded-full transition-all ${f.friendAccessToMe.includes("all") ? 'translate-x-4' : ''}`} />
+                             </div>
+                             <span className="text-[9px] font-black uppercase tracking-widest opacity-40 group-hover/toggle:opacity-100">ALL</span>
+                          </label>
+                       </div>
+
+                       <div className="flex gap-2">
+                          <AccessButton 
+                             active={f.friendAccessToMe.includes("memories") || f.friendAccessToMe.includes("all")} 
+                             icon={Heart} label="Memories"
+                             onClick={() => {
+                                if (f.friendAccessToMe.includes("all")) return;
+                                const current = f.friendAccessToMe.filter((a: string) => a !== "all");
+                                const next = current.includes("memories") ? current.filter((a: string) => a !== "memories") : [...current, "memories"];
+                                updateAccess({ userId: userId!, friendshipId: f.friendshipId, access: next });
+                             }}
+                          />
+                          <AccessButton 
+                             active={f.friendAccessToMe.includes("timeline") || f.friendAccessToMe.includes("all")} 
+                             icon={Users} label="Timeline"
+                             onClick={() => {
+                                if (f.friendAccessToMe.includes("all")) return;
+                                const current = f.friendAccessToMe.filter((a: string) => a !== "all");
+                                const next = current.includes("timeline") ? current.filter((a: string) => a !== "timeline") : [...current, "timeline"];
+                                updateAccess({ userId: userId!, friendshipId: f.friendshipId, access: next });
+                             }}
+                          />
+                          <AccessButton 
+                             active={f.friendAccessToMe.includes("events") || f.friendAccessToMe.includes("all")} 
+                             icon={Clock} label="Events"
+                             onClick={() => {
+                                if (f.friendAccessToMe.includes("all")) return;
+                                const current = f.friendAccessToMe.filter((a: string) => a !== "all");
+                                const next = current.includes("events") ? current.filter((a: string) => a !== "events") : [...current, "events"];
+                                updateAccess({ userId: userId!, friendshipId: f.friendshipId, access: next });
+                             }}
+                          />
+                       </div>
+                    </div>
+
+                    {/* Background Glow Effect */}
+                    <div className="absolute -bottom-10 -right-10 w-24 h-24 bg-primary/5 blur-3xl opacity-0 group-hover:opacity-100 transition-opacity" />
+                 </motion.div>
               ))}
             </div>
           )}
@@ -255,5 +309,18 @@ export default function FriendsPage() {
       </div>
       <Footer minimal />
     </main>
+  );
+}
+
+function AccessButton({ active, icon: Icon, label, onClick }: any) {
+  return (
+    <button 
+      onClick={onClick}
+      className={`flex-1 flex flex-col items-center gap-2 p-3 rounded-2xl border transition-all ${active ? 'bg-white shadow-md' : 'opacity-40 grayscale hover:grayscale-0 hover:opacity-100 bg-white/20'}`}
+      style={{ borderColor: active ? 'var(--primary-soft)' : 'transparent' }}
+    >
+       <Icon className={`w-4 h-4 ${active ? 'text-rose-500' : 'text-gray-400'}`} />
+       <span className="text-[8px] font-black uppercase tracking-widest">{label}</span>
+    </button>
   );
 }

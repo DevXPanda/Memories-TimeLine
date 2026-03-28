@@ -5,6 +5,8 @@ import LoveChatbot from "@/components/LoveChatbot";
 import { AuthProvider } from "@/components/AuthProvider";
 import { ThemeProvider } from "@/components/ThemeProvider";
 
+import CelebrationDecoration from "@/components/CelebrationDecoration";
+
 const convex = new ConvexReactClient(process.env.NEXT_PUBLIC_CONVEX_URL!);
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
@@ -25,6 +27,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <ThemeProvider>
             <AuthProvider>
               {children}
+              <CelebrationDecoration />
               <LoveChatbot />
             </AuthProvider>
           </ThemeProvider>

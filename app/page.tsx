@@ -28,6 +28,13 @@ export default function Home() {
   const favOnly  = params.get("favorite") === "true";
 
   const [showFilters, setShowFilters] = useState(false);
+  const [visibleCount, setVisibleCount] = useState(9);
+
+  // Reset pagination when filters change
+  useEffect(() => {
+    setVisibleCount(9);
+  }, [category, mood, search, favOnly]);
+
 
   const memories = useQuery(api.memories.list, {
     userId:       userId || undefined,
@@ -166,10 +173,29 @@ export default function Home() {
                 ))}
               </div>
             ) : memories.length > 0 ? (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
-                {memories.map(m => (
-                  <MemoryCard key={m._id} memory={m} />
-                ))}
+              <div className="space-y-12">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+                  {memories.slice(0, visibleCount).map(m => (
+                    <MemoryCard key={m._id} memory={m} />
+                  ))}
+                </div>
+
+                {memories.length > visibleCount && (
+                  <div className="flex justify-center pb-12">
+                    <button 
+                      onClick={() => setVisibleCount(v => v + 9)}
+                      className="group flex flex-col items-center gap-4 transition-all hover:scale-105 active:scale-95"
+                    >
+                      <div className="text-[10px] font-black uppercase tracking-[0.3em] opacity-40 group-hover:opacity-100 transition-opacity" style={{ color: "var(--primary-deep)" }}>
+                        More stories to uncover
+                      </div>
+                      <div className="w-16 h-16 rounded-[28px] glass-strong border shadow-xl flex items-center justify-center transition-all group-hover:shadow-2xl group-hover:border-rose-300" 
+                        style={{ borderColor: "var(--border-glass)", color: "var(--primary)" }}>
+                        <ArrowRight className="w-6 h-6 rotate-90" />
+                      </div>
+                    </button>
+                  </div>
+                )}
               </div>
             ) : (
               <div className="text-center py-32 glass-strong rounded-[40px] border" style={{ borderColor: "var(--border-glass)" }}>

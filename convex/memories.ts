@@ -2,7 +2,6 @@ import { v } from "convex/values";
 import { query, mutation } from "./_generated/server";
 
 // ─── Helper ───────────────────────────────────────────────────────────────────
-// ─── Helper ───────────────────────────────────────────────────────────────────
 async function attachImageUrl(ctx: any, memory: any) {
   let imageUrl = memory.imageUrl;
   if (memory.imageStorageId && !imageUrl) {
@@ -32,12 +31,12 @@ export const list = query({
   handler: async (ctx, args) => {
     if (!args.userId) return [];
     
-    // Get user's own memories
+    // Own memories
     const myMemories = await ctx.db.query("memories")
       .withIndex("by_user", (q) => q.eq("userId", args.userId))
       .collect();
 
-    // Get friends' ids
+    // Friendships check
     const friendships = await ctx.db
       .query("friendships")
       .filter((q) => 
@@ -48,17 +47,23 @@ export const list = query({
       )
       .collect();
 
-    const friendIds = friendships.map(f => f.user1Id === args.userId ? f.user2Id : f.user1Id);
-
     // Get friends' shared memories
     let sharedMemories: any[] = [];
-    for (const fId of friendIds) {
-       const shared = await ctx.db
-         .query("memories")
-         .withIndex("by_user", (q) => q.eq("userId", fId))
-         .filter((q) => q.eq(q.field("visibility"), "friends"))
-         .collect();
-       sharedMemories = [...sharedMemories, ...shared];
+    for (const f of friendships) {
+       const isUser1 = f.user1Id === args.userId;
+       const friendId = isUser1 ? f.user2Id : f.user1Id;
+       const access = isUser1 ? (f.user2Access || ["all"]) : (f.user1Access || ["all"]);
+       
+       const canSee = access.includes("all") || access.includes("memories") || access.includes("timeline");
+
+       if (canSee) {
+          const shared = await ctx.db
+            .query("memories")
+            .withIndex("by_user", (q) => q.eq("userId", friendId))
+            .filter((q) => q.eq(q.field("visibility"), "friends"))
+            .collect();
+          sharedMemories = [...sharedMemories, ...shared];
+       }
     }
 
     let memories = [...myMemories, ...sharedMemories];
@@ -79,7 +84,6 @@ export const list = query({
     }
 
     memories.sort((a, b) => b.createdAt - a.createdAt);
-
     return Promise.all(memories.map((m: any) => attachImageUrl(ctx, m)));
   },
 });
@@ -105,7 +109,12 @@ export const getById = query({
            )
          )
          .unique();
-       if (friendship) return attachImageUrl(ctx, m);
+        if (friendship) {
+           const isUser1 = friendship.user1Id === args.userId;
+           const access = isUser1 ? (friendship.user2Access || ["all"]) : (friendship.user1Access || ["all"]);
+           const canSee = access.includes("all") || access.includes("memories") || access.includes("timeline");
+           if (canSee) return attachImageUrl(ctx, m);
+        }
     }
 
     return null;
@@ -117,7 +126,6 @@ export const getTimeline = query({
   handler: async (ctx, args) => {
     if (!args.userId) return [];
     
-    // Get all viewable memories (own + friends')
     const friendships = await ctx.db
       .query("friendships")
       .filter((q) => 
@@ -128,21 +136,25 @@ export const getTimeline = query({
       )
       .collect();
 
-    const friendIds = friendships.map(f => f.user1Id === args.userId ? f.user2Id : f.user1Id);
-    
     const myMemories = await ctx.db
       .query("memories")
       .withIndex("by_user", (q) => q.eq("userId", args.userId))
       .collect();
 
     let shared: any[] = [];
-    for (const fId of friendIds) {
-       const s = await ctx.db
-         .query("memories")
-         .withIndex("by_user", (q) => q.eq("userId", fId))
-         .filter((q) => q.eq(q.field("visibility"), "friends"))
-         .collect();
-       shared = [...shared, ...s];
+    for (const f of friendships) {
+       const isUser1 = f.user1Id === args.userId;
+       const friendId = isUser1 ? f.user2Id : f.user1Id;
+       const access = isUser1 ? (f.user2Access || ["all"]) : (f.user1Access || ["all"]);
+
+       if (access.includes("all") || access.includes("timeline")) {
+          const s = await ctx.db
+            .query("memories")
+            .withIndex("by_user", (q) => q.eq("userId", friendId))
+            .filter((q) => q.eq(q.field("visibility"), "friends"))
+            .collect();
+          shared = [...shared, ...s];
+       }
     }
     
     const memories = [...myMemories, ...shared];
@@ -189,7 +201,6 @@ export const getRecent = query({
   handler: async (ctx, args) => {
     if (!args.userId) return [];
     
-    // Get friends ids
     const friendships = await ctx.db
       .query("friendships")
       .filter((q) => 
@@ -200,25 +211,27 @@ export const getRecent = query({
       )
       .collect();
 
-    const friendIds = friendships.map(f => f.user1Id === args.userId ? f.user2Id : f.user1Id);
-    
-    // Own recent
     const myRecent = await ctx.db
       .query("memories")
       .withIndex("by_user", (q) => q.eq("userId", args.userId))
       .order("desc")
       .take(args.limit ?? 6);
 
-    // Friend recent
     let friendRecent: any[] = [];
-    for (const fId of friendIds) {
-       const s = await ctx.db
-         .query("memories")
-         .withIndex("by_user", (q) => q.eq("userId", fId))
-         .filter((q) => q.eq(q.field("visibility"), "friends"))
-         .order("desc")
-         .take(args.limit ?? 6);
-       friendRecent = [...friendRecent, ...s];
+    for (const f of friendships) {
+       const isUser1 = f.user1Id === args.userId;
+       const friendId = isUser1 ? f.user2Id : f.user1Id;
+       const access = isUser1 ? (f.user2Access || ["all"]) : (f.user1Access || ["all"]);
+
+       if (access.includes("all") || access.includes("memories") || access.includes("timeline")) {
+          const s = await ctx.db
+            .query("memories")
+            .withIndex("by_user", (q) => q.eq("userId", friendId))
+            .filter((q) => q.eq(q.field("visibility"), "friends"))
+            .order("desc")
+            .take(args.limit ?? 6);
+          friendRecent = [...friendRecent, ...s];
+       }
     }
     
     const combined = [...myRecent, ...friendRecent]
@@ -226,6 +239,51 @@ export const getRecent = query({
       .slice(0, args.limit ?? 6);
 
     return Promise.all(combined.map((m) => attachImageUrl(ctx, m)));
+  },
+});
+
+export const getByDate = query({
+  args: { date: v.string(), userId: v.optional(v.id("users")), excludeId: v.id("memories") },
+  handler: async (ctx, args) => {
+    if (!args.userId) return [];
+    
+    // Own memories for that date
+    const myMemories = await ctx.db.query("memories")
+      .withIndex("by_user", (q) => q.eq("userId", args.userId))
+      .filter((q) => q.eq(q.field("date"), args.date))
+      .collect();
+
+    // Friendships check
+    const friendships = await ctx.db
+      .query("friendships")
+      .filter((q) => 
+        q.and(
+          q.eq(q.field("status"), "accepted"),
+          q.or(q.eq(q.field("user1Id"), args.userId), q.eq(q.field("user2Id"), args.userId))
+        )
+      )
+      .collect();
+
+    let sharedMemories: any[] = [];
+    for (const f of friendships) {
+       const isUser1 = f.user1Id === args.userId;
+       const friendId = isUser1 ? f.user2Id : f.user1Id;
+       const access = isUser1 ? (f.user2Access || ["all"]) : (f.user1Access || ["all"]);
+       
+       const canSee = access.includes("all") || access.includes("memories") || access.includes("timeline");
+
+       if (canSee) {
+          const shared = await ctx.db
+            .query("memories")
+            .withIndex("by_user", (q) => q.eq("userId", friendId))
+            .filter((q) => q.and(q.eq(q.field("visibility"), "friends"), q.eq(q.field("date"), args.date)))
+            .collect();
+          sharedMemories = [...sharedMemories, ...shared];
+       }
+    }
+
+    const all = [...myMemories, ...sharedMemories].filter(m => m._id !== args.excludeId);
+    return Promise.all(all.map((m) => attachImageUrl(ctx, m)));
   },
 });
 
