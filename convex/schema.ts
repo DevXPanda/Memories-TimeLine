@@ -68,4 +68,34 @@ export default defineSchema({
     .index("by_user1", ["user1Id"])
     .index("by_user2", ["user2Id"])
     .index("by_both", ["user1Id", "user2Id"]),
+
+  messages: defineTable({
+    senderId: v.id("users"),
+    receiverId: v.id("users"),
+    content: v.string(),
+    status: v.string(), // "sent", "delivered", "read"
+    createdAt: v.number(),
+  })
+    .index("by_conversation", ["senderId", "receiverId"])
+    .index("by_receiver", ["receiverId", "status"]),
+
+  typingStatuses: defineTable({
+    userId: v.id("users"),
+    receiverId: v.id("users"),
+    isTyping: v.boolean(),
+    lastUpdated: v.number(),
+  })
+    .index("by_user", ["userId", "receiverId"])
+    .index("by_receiver", ["receiverId"]),
+
+  notifications: defineTable({
+    userId: v.id("users"),
+    type: v.string(), // "message", "friend_request", "friend_accept", "memory_like"
+    fromUserId: v.id("users"),
+    content: v.string(),
+    isRead: v.boolean(),
+    createdAt: v.number(),
+  })
+    .index("by_user_unread", ["userId", "isRead"])
+    .index("by_createdAt", ["createdAt"]),
 });

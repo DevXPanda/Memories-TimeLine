@@ -353,9 +353,25 @@ export const toggleFavorite = mutation({
   args: { id: v.id("memories"), userId: v.id("users") },
   handler: async (ctx, args) => {
     const m = await ctx.db.get(args.id);
-    if (!m || m.userId !== args.userId) throw new Error("Unauthorized");
-    await ctx.db.patch(args.id, { isFavorite: !m.isFavorite, updatedAt: Date.now() });
-    return !m.isFavorite;
+    if (!m) throw new Error("Memory not found");
+    const newStatus = !m.isFavorite;
+    await ctx.db.patch(args.id, { isFavorite: newStatus, updatedAt: Date.now() });
+
+    // If favorited by someone else, notify the owner
+    const memoryOwnerId = m.userId;
+    if (newStatus && memoryOwnerId !== args.userId) {
+      const user = await ctx.db.get(args.userId);
+      await ctx.db.insert("notifications", {
+        userId: memoryOwnerId as any, // Final safety cast
+        type: "memory_like",
+        fromUserId: args.userId,
+        content: `${user?.email.split('@')[0] || "Someone"} liked your memory! ❤️`,
+        isRead: false,
+        createdAt: Date.now(),
+      });
+    }
+
+    return newStatus;
   },
 });
 

@@ -30,7 +30,9 @@ export const sendRequest = mutation({
       throw new Error("Pehle se hi ek request aayi hui hai! Accept it? 😉");
     }
 
-    return await ctx.db.insert("friendships", {
+    const user1 = await ctx.db.get(args.userId);
+
+    const requestId = await ctx.db.insert("friendships", {
       user1Id: args.userId,
       user2Id: friend._id,
       status: "pending",
@@ -38,13 +40,38 @@ export const sendRequest = mutation({
       user2Access: ["all"],
       createdAt: Date.now(),
     });
+
+    // Notify user2 of a new request
+    await ctx.db.insert("notifications", {
+      userId: friend._id,
+      type: "friend_request",
+      fromUserId: args.userId,
+      content: `${user1?.email.split('@')[0]} sent you a sanctuary request! ✨`,
+      isRead: false,
+      createdAt: Date.now(),
+    });
+
+    return requestId;
   },
 });
 
 export const acceptRequest = mutation({
   args: { friendshipId: v.id("friendships") },
   handler: async (ctx, args) => {
+    const friendship = await ctx.db.get(args.friendshipId);
+    if (!friendship) throw new Error("Friendship not found");
+
     await ctx.db.patch(args.friendshipId, { status: "accepted" });
+
+    // Notify user1 that user2 accepted the invitation
+    await ctx.db.insert("notifications", {
+      userId: friendship.user1Id,
+      type: "friend_accept",
+      fromUserId: friendship.user2Id,
+      content: `Your request was accepted! You are now connected. ✨`,
+      isRead: false,
+      createdAt: Date.now(),
+    });
   },
 });
 

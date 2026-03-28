@@ -5,13 +5,14 @@ import { api } from "@/convex/_generated/api";
 import { useAuth } from "@/components/AuthProvider";
 import { 
   UserPlus, Users, Clock, Check, Shield, 
-  Search, Copy, Send, Loader2, Sparkles, User, Key, Heart, Ban, UserMinus
+  Search, Copy, Send, Loader2, Sparkles, User, Key, Heart, Ban, UserMinus, MessageSquare
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { useSanctuaryUI } from "@/components/SanctuaryUIProvider";
+import SanctuaryChat from "@/components/SanctuaryChat";
 
 export default function FriendsPage() {
   const { userId } = useAuth();
@@ -31,6 +32,7 @@ export default function FriendsPage() {
 
   const [uidInput, setUidInput] = useState("");
   const [loading, setLoading] = useState(false);
+  const [activeChat, setActiveChat] = useState<{ friendId: any; friendName: string } | null>(null);
 
   const handleSend = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -253,7 +255,13 @@ export default function FriendsPage() {
                            </div>
 
                            <div className="flex items-center gap-2">
-                              <Link href="/timeline" className="w-10 h-10 rounded-xl glass border flex items-center justify-center shadow-md hover:bg-slate-800 hover:text-white transition-all group/clk" style={{ borderColor: 'var(--border-glass)' }}>
+                              <button 
+                                 onClick={() => setActiveChat({ friendId: f._id, friendName: f.email.split('@')[0] })}
+                                 className="w-10 h-10 rounded-xl glass border flex items-center justify-center shadow-md hover:bg-emerald-500 hover:text-white transition-all group/msg" style={{ borderColor: 'var(--border-glass)' }}>
+                                  <MessageSquare className="w-4.5 h-4.5 opacity-40 group-hover/msg:opacity-100" />
+                               </button>
+
+                               <Link href="/timeline" className="w-10 h-10 rounded-xl glass border flex items-center justify-center shadow-md hover:bg-slate-800 hover:text-white transition-all group/clk" style={{ borderColor: 'var(--border-glass)' }}>
                                  <Clock className="w-4.5 h-4.5 opacity-40 group-hover/clk:opacity-100" />
                               </Link>
                               
@@ -403,6 +411,17 @@ export default function FriendsPage() {
             </motion.div>
           )}
         </AnimatePresence>
+
+         <AnimatePresence>
+            {activeChat && (
+               <SanctuaryChat 
+                  userId={userId!} 
+                  friendId={activeChat.friendId}
+                  friendName={activeChat.friendName}
+                  onClose={() => setActiveChat(null)}
+               />
+            )}
+         </AnimatePresence>
       </div>
       <Footer minimal />
     </main>

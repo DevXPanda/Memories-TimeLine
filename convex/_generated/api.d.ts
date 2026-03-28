@@ -13,6 +13,8 @@ import type * as events from "../events.js";
 import type * as friends from "../friends.js";
 import type * as http from "../http.js";
 import type * as memories from "../memories.js";
+import type * as messages from "../messages.js";
+import type * as notifications from "../notifications.js";
 
 import type {
   ApiFromModules,
@@ -26,6 +28,8 @@ declare const fullApi: ApiFromModules<{
   friends: typeof friends;
   http: typeof http;
   memories: typeof memories;
+  messages: typeof messages;
+  notifications: typeof notifications;
 }>;
 
 /**
