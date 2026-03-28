@@ -230,55 +230,97 @@ export default function LoveChatbot() {
 
   const fmt = (ts: number) => new Date(ts).toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" });
 
+  const [fabOpen, setFabOpen] = useState(false);
+
+  const FAB_ITEMS = [
+    { href: "/memories/new", label: "New Story", icon: Plus, color: "var(--primary)" },
+    { href: "/timeline", label: "Timeline", icon: History, color: "var(--primary-soft)" },
+    { href: "/friends", label: "Partners", icon: Settings2, color: "var(--accent)" },
+    { href: "/chat", label: "Messages", icon: MessageCircleHeart, color: "var(--primary-deep)" },
+  ];
+
   if (!userId) return null;
 
   return (
     <>
       <div className="fixed bottom-6 right-6 z-50 flex flex-col items-end gap-3 pointer-events-none">
-        {/* Add Memory FAB */}
+        
+        {/* Shortcut Quick Menu (Drop-up) - VERTICAL */}
+        <AnimatePresence>
+          {fabOpen && !open && (
+            <motion.div 
+               initial={{ opacity: 0, y: 20, scale: 0.8 }} 
+               animate={{ opacity: 1, y: 0, scale: 1 }} 
+               exit={{ opacity: 0, y: 20, scale: 0.8 }}
+               className="flex flex-col items-end gap-3 mb-2"
+            >
+              {FAB_ITEMS.map((item, i) => (
+                <Link 
+                  key={item.href} 
+                  href={item.href}
+                  className="group flex items-center gap-3 pr-1 pointer-events-auto"
+                  onClick={() => setFabOpen(false)}
+                >
+                  <span className="bg-white/95 backdrop-blur-md px-3 py-1.5 rounded-xl border text-[9px] font-black uppercase tracking-widest shadow-xl opacity-0 group-hover:opacity-100 transition-all transform translate-x-3 group-hover:translate-x-0"
+                    style={{ borderColor: "var(--border-glass-strong)", color: "var(--primary-deep)" }}>
+                    {item.label}
+                  </span>
+                  <div className="w-12 h-12 rounded-[20px] flex items-center justify-center shadow-2xl border border-white/20 transition-all hover:scale-110 active:scale-90"
+                    style={{ background: item.color }}>
+                    <item.icon className="w-5 h-5 text-white" />
+                  </div>
+                </Link>
+              ))}
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Main Buttons (Stacked Vertically) */}
         {!open && (
-          <Link href="/memories/new"
-            className="w-14 h-14 rounded-[22px] flex items-center justify-center transition-all hover:scale-110 active:scale-95 shadow-2xl group border border-white/20 pointer-events-auto"
-            style={{ background: "var(--primary)", boxShadow: "0 10px 30px rgba(var(--primary-rgb), 0.3)" }}>
-            <Plus className="w-6 h-6 text-white group-hover:rotate-90 transition-transform" />
-          </Link>
+         <button
+           onClick={() => setFabOpen(!fabOpen)}
+           className={`w-14 h-14 rounded-[22px] flex items-center justify-center transition-all shadow-2xl group border border-white/20 pointer-events-auto ${fabOpen ? "rotate-45" : ""}`}
+           style={{ 
+             background: fabOpen ? "var(--text-main)" : "var(--primary)", 
+             boxShadow: "0 10px 40px rgba(0,0,0,0.15)" 
+           }}>
+           <Plus className="w-6 h-6 text-white transition-transform" />
+         </button>
         )}
 
-        {/* Chatbot ROW with Nudge to the LEFT */}
-        <div className="flex items-center gap-4 pointer-events-auto">
-          {/* Nudge Bubble - Positioned to the LEFT now */}
-          <AnimatePresence>
-            {nudge && !open && (
-              <motion.div
-                initial={{ opacity: 0, x: 20, scale: 0.9 }}
-                animate={{ opacity: 1, x: 0, scale: 1 }}
-                exit={{ opacity: 0, x: 20, scale: 0.9 }}
-                className="glass-strong backdrop-blur-md px-5 py-3 rounded-[24px] rounded-br-[4px] shadow-2xl border relative flex-shrink-0"
-                onClick={() => setOpen(true)}
-                style={{ cursor: "pointer", background: "var(--primary-blush)", borderColor: "var(--border-glass-strong)", boxShadow: "0 10px 40px rgba(0, 0, 0, 0.1)" }}>
-                <p className="text-[13px] font-bold whitespace-nowrap" style={{ color: "var(--primary)" }}>{nudge}</p>
-                <div className="absolute top-1/2 -translate-y-1/2 -right-2 w-3 h-3 border-r border-t rotate-45" style={{ background: "var(--primary-blush)", borderColor: "var(--border-glass-strong)" }} />
-              </motion.div>
-            )}
-          </AnimatePresence>
+        <div className="flex flex-row items-center justify-end gap-3 pointer-events-auto">
+           {/* Nudge Bubble (Positioned to the LEFT) */}
+           <AnimatePresence>
+             {nudge && !open && (
+               <motion.div
+                 initial={{ opacity: 0, x: 20, scale: 0.9 }}
+                 animate={{ opacity: 1, x: 0, scale: 1 }}
+                 exit={{ opacity: 0, x: 20, scale: 0.9 }}
+                 className="glass-strong backdrop-blur-md px-5 py-3 rounded-[24px] rounded-br-[4px] shadow-2xl border relative flex-shrink-0"
+                 onClick={() => setOpen(true)}
+                 style={{ cursor: "pointer", background: "var(--primary-blush)", borderColor: "var(--border-glass-strong)" }}>
+                 <p className="text-[13px] font-bold" style={{ color: "var(--primary)" }}>{nudge}</p>
+                 <div className="absolute top-1/2 -translate-y-1/2 -right-2 w-3 h-3 border-r border-t rotate-45" style={{ background: "var(--primary-blush)", borderColor: "var(--border-glass-strong)" }} />
+               </motion.div>
+             )}
+           </AnimatePresence>
 
-          {/* Chatbot FAB */}
-          <button
-            onClick={() => setOpen(!open)}
-            className={`w-14 h-14 rounded-[22px] flex items-center justify-center transition-all hover:scale-110 active:scale-95 shadow-2xl border border-white/20 group relative flex-shrink-0 ${open ? "bg-white rotate-90" : ""}`}
-            style={{
-              background: open ? "var(--bg-glass-strong)" : "var(--primary)",
-              boxShadow: open ? "0 10px 30px rgba(0,0,0,0.1)" : "0 10px 30px rgba(var(--primary-rgb), 0.3)"
-            }}>
-            {open ? (
-              <X className="w-6 h-6" style={{ color: "var(--primary)" }} />
-            ) : (
-              <>
-                <MessageCircleHeart className="w-6 h-6 text-white" />
-                <div className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-green-500 border-2 border-white" />
-              </>
-            )}
-          </button>
+           <button
+             onClick={() => { setOpen(!open); setFabOpen(false); }}
+             className={`w-14 h-14 rounded-[22px] flex items-center justify-center transition-all hover:scale-110 active:scale-95 shadow-2xl border border-white/20 group relative ${open ? "bg-white rotate-90" : ""}`}
+             style={{
+               background: open ? "var(--bg-glass-strong)" : "var(--primary)",
+               boxShadow: "0 10px 40px rgba(0,0,0,0.15)"
+             }}>
+             {open ? (
+               <X className="w-6 h-6" style={{ color: "var(--primary)" }} />
+             ) : (
+               <>
+                 <MessageCircleHeart className="w-6 h-6 text-white" />
+                 <div className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-green-500 border-2 border-white" />
+               </>
+             )}
+           </button>
         </div>
       </div>
 

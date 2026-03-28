@@ -68,7 +68,8 @@ export default function MemoryDetailPage({ params }: { params: { id: string } })
         </Link>
 
         {memory && (
-          <article className="glass-strong rounded-[48px] overflow-hidden border shadow-2xl bg-white flex flex-col md:flex-row md:h-[450px]" style={{ borderColor: "var(--border-glass)" }}>
+          <article className="glass-strong rounded-[48px] overflow-hidden border shadow-2xl flex flex-col md:flex-row md:h-[450px]" 
+            style={{ borderColor: "var(--border-glass)", background: "var(--bg-glass-strong)" }}>
             {/* Left side: Immersive Landscape Image */}
             <div className="md:w-1/2 relative bg-black/5 h-[300px] md:h-full cursor-pointer group flex-shrink-0" onClick={() => memory.imageUrl && setShowLightbox(true)}>
               {memory.imageUrl ? (
@@ -96,7 +97,7 @@ export default function MemoryDetailPage({ params }: { params: { id: string } })
                         </span>
                       )}
                     </div>
-                    <h1 className="text-3xl sm:text-4xl font-bold uppercase tracking-tighter text-white truncate" style={{ fontFamily: "var(--font-serif)" }}>
+                    <h1 className="text-3xl sm:text-4xl font-bold tracking-tight text-white truncate" style={{ fontFamily: "var(--font-serif)" }}>
                       {memory.title}
                     </h1>
                   </div>
@@ -107,7 +108,7 @@ export default function MemoryDetailPage({ params }: { params: { id: string } })
             </div>
 
             {/* Right side: Compact Content */}
-            <div className="flex-1 p-6 sm:p-10 flex flex-col min-w-0 bg-white overflow-hidden">
+            <div className="flex-1 p-6 sm:p-10 flex flex-col min-w-0 bg-transparent overflow-hidden">
               <div className="mb-4 flex items-center justify-between">
                 <span className="text-[8px] font-black uppercase tracking-[0.2em] opacity-30" style={{ color: "var(--text-main)" }}>
                   Capturing the Essence
@@ -210,15 +211,15 @@ function RelatedMoments({ memory }: { memory: any }) {
       <div className="overflow-x-auto pb-6 -mx-4 px-4" style={{ scrollbarWidth: "none" }}>
         <div className="flex gap-4 min-w-max">
           {related.map((m: any) => (
-            <Link key={m._id} href={`/memories/${m._id}`} className="w-[200px] group">
-              <div className="aspect-video rounded-[20px] overflow-hidden border mb-3 relative shadow-sm transition-all group-hover:shadow-lg" style={{ borderColor: "var(--border-glass)" }}>
+            <Link key={m._id} href={`/memories/${m._id}`} className="w-[180px] group">
+              <div className="aspect-[3/4] rounded-[24px] overflow-hidden border mb-4 relative shadow-sm transition-all group-hover:shadow-lg group-hover:-translate-y-1" style={{ borderColor: "var(--border-glass)" }}>
                 {m.imageUrl ? (
                   <img src={m.imageUrl} alt={m.title} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
                 ) : (
-                  <div className="w-full h-full glass flex items-center justify-center text-4xl">✨</div>
+                  <div className="w-full h-full glass flex items-center justify-center text-4xl" style={{ background: "var(--primary-blush)" }}>✨</div>
                 )}
               </div>
-              <h4 className="font-bold text-xs truncate uppercase tracking-tighter" style={{ fontFamily: "var(--font-serif)", color: "var(--primary-deep)" }}>{m.title}</h4>
+              <h4 className="font-bold text-sm tracking-tight px-1" style={{ fontFamily: "var(--font-serif)", color: "var(--primary-deep)" }}>{m.title}</h4>
             </Link>
           ))}
         </div>

@@ -131,7 +131,7 @@ export default function MemoryCard({ memory }: { memory: Memory }) {
             <div className="w-10 h-10 rounded-2xl bg-rose-50 flex items-center justify-center text-xl shadow-inner group-hover:rotate-6 transition-transform">
               {mood?.emoji || "✨"}
             </div>
-            <h3 className="text-2xl font-black leading-tight tracking-tighter line-clamp-1 flex-1 uppercase"
+            <h3 className="text-2xl font-bold leading-tight tracking-tight line-clamp-1 flex-1"
               style={{ fontFamily: "var(--font-serif)", color: "var(--primary-deep)" }}>
               {memory.title}
             </h3>
