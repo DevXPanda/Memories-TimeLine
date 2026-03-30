@@ -6,6 +6,7 @@ import { useMutation } from "convex/react";
 import { api } from "../convex/_generated/api";
 import { CHAT_SETTINGS_KEY, CHAT_HISTORY_KEY } from "@/lib/constants";
 import { useAuth } from "./AuthProvider";
+import { usePathname } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 
 interface Message {
@@ -32,6 +33,7 @@ const QUICK = [
 ];
 
 export default function LoveChatbot() {
+  const pathname = usePathname();
   const { userId } = useAuth();
   const [open, setOpen] = useState(false);
   const [msgs, setMsgs] = useState<Message[]>([]);
@@ -239,7 +241,7 @@ export default function LoveChatbot() {
     { href: "/chat", label: "Messages", icon: MessageCircleHeart, color: "var(--primary-deep)" },
   ];
 
-  if (!userId) return null;
+  if (!userId || pathname === "/chat") return null;
 
   return (
     <>

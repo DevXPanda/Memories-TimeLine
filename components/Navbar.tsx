@@ -4,11 +4,13 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import {
   Heart, Home, Clock, Plus, LogOut, Search, User, Menu, X,
-  ChevronRight, Sparkles, Palette, ChevronDown, Users, MessageSquare
+  ChevronRight, Sparkles, Palette, ChevronDown, Users, MessageSquare, Smile, Pencil
 } from "lucide-react";
 import { useAuth } from "./AuthProvider";
 import ThemeSwitcher from "./ThemeSwitcher";
 import { motion, AnimatePresence } from "framer-motion";
+import { useQuery, useMutation } from "convex/react";
+import { api } from "@/convex/_generated/api";
 
 const NAV = [
   { href: "/", label: "Home", icon: Home },
@@ -21,6 +23,12 @@ export default function Navbar() {
   const pathname = usePathname();
   const router = useRouter();
   const { logout, userId, email, openLogin } = useAuth();
+  const currentUser = useQuery(api.auth.getUser, { userId: userId ?? undefined });
+  const updateUserName = useMutation(api.auth.updateUserName);
+
+  const [isEditingName, setIsEditingName] = useState(false);
+  const [tempName, setTempName] = useState("");
+  const [nameError, setNameError] = useState("");
 
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
@@ -116,8 +124,12 @@ export default function Navbar() {
                       borderColor: isProfileOpen ? 'var(--border-glass-strong)' : 'transparent',
                       color: 'var(--text-light)'
                     }}>
-                    <div className="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center shadow-md">
-                      <User className="w-5 h-5" style={{ color: 'var(--primary)' }} />
+                    <div className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center shadow-md overflow-hidden">
+                      {currentUser?.profileImage ? (
+                        <img src={currentUser.profileImage} alt="Me" className="w-full h-full object-cover" />
+                      ) : (
+                        <User className="w-5 h-5" style={{ color: 'var(--primary)' }} />
+                      )}
                     </div>
                     <ChevronDown className={`w-4 h-4 opacity-40 transition-transform ${isProfileOpen ? 'rotate-180' : ''}`} />
                   </button>
@@ -129,9 +141,49 @@ export default function Navbar() {
                         className="absolute top-[calc(100%+8px)] right-0 w-64 glass-strong rounded-[32px] border shadow-2xl overflow-hidden p-2 z-[130]"
                         style={{ background: 'var(--bg-glass-strong)', borderColor: 'var(--border-glass-strong)' }}>
                         <div className="p-5 border-b mb-1" style={{ borderColor: 'var(--border-glass)' }}>
-                          <p className="text-[9px] font-black uppercase tracking-widest opacity-40 mb-1.5">My Account</p>
-                          <p className="font-bold text-sm break-all" style={{ color: 'var(--text-main)' }}>{email}</p>
-                          <p className="text-[10px] font-medium opacity-50 truncate mt-0.5" style={{ color: 'var(--text-muted)' }}>{email?.split('@')[0]}</p>
+                          <p className="text-[9px] font-black uppercase tracking-widest opacity-40 mb-1.5">My Sanctuary Identity</p>
+                          {isEditingName ? (
+                            <div className="space-y-1.5">
+                              <input 
+                                autoFocus
+                                value={tempName}
+                                onChange={(e) => { setTempName(e.target.value); setNameError(""); }}
+                                onBlur={() => { if (tempName.trim() === (currentUser?.username || email?.split('@')[0])) setIsEditingName(false); }}
+                                onKeyDown={async (e) => {
+                                  if (e.key === 'Enter') {
+                                    try {
+                                      await updateUserName({ userId: userId!, username: tempName });
+                                      setIsEditingName(false);
+                                    } catch (err: any) {
+                                      const msg = err.message || "";
+                                      if (msg.includes("this user name exist")) {
+                                        setNameError("this user name exist");
+                                      } else {
+                                        const cleanMatch = msg.match(/Uncaught Error: (.*?)(?:\nat|$)/);
+                                        setNameError(cleanMatch ? cleanMatch[1].trim() : msg);
+                                      }
+                                    }
+                                  } else if (e.key === 'Escape') {
+                                    setIsEditingName(false);
+                                  }
+                                }}
+                                className="w-full bg-white/20 border border-white/30 rounded-lg px-2.5 py-1.5 font-bold text-sm outline-none focus:border-rose-400"
+                                style={{ color: 'var(--text-main)' }}
+                              />
+                              {nameError && <p className="text-[8px] text-rose-500 font-bold uppercase tracking-tight">{nameError}</p>}
+                              <p className="text-[8px] opacity-40 uppercase tracking-widest leading-none">Press Enter to save</p>
+                            </div>
+                          ) : (
+                            <div className="group/name cursor-pointer bg-white/0 hover:bg-white/5 px-2 py-0.5 rounded-lg transition-all" onClick={() => { setTempName(currentUser?.username || email?.split('@')[0] || ""); setIsEditingName(true); }}>
+                              <div className="flex items-center gap-1.5 mb-0.5">
+                                <h4 className="font-bold text-sm break-all" style={{ color: 'var(--text-main)' }}>
+                                  {currentUser?.username || email?.split('@')[0]}
+                                </h4>
+                                <Pencil className="w-2.5 h-2.5 opacity-20 group-hover/name:opacity-60 transition-opacity" />
+                              </div>
+                              <p className="text-[10px] font-medium opacity-40 truncate" style={{ color: 'var(--text-muted)' }}>{email}</p>
+                            </div>
+                          )}
                         </div>
                         <button onClick={logout}
                           className="w-full flex items-center gap-3 p-4 rounded-2xl transition-all hover:bg-red-50/10 group/item"
@@ -204,19 +256,29 @@ export default function Navbar() {
                 <div className="rounded-3xl p-5 border flex items-center justify-between"
                   style={{ backgroundColor: 'var(--primary-blush)', borderColor: 'var(--border-glass-strong)', opacity: 0.9 }}>
                   <div className="flex items-center gap-4">
-                    <div className="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center shadow-md" style={{ color: 'var(--primary)' }}>
-                      <User className="w-5 h-5" />
+                    <div className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center shadow-md overflow-hidden" style={{ color: 'var(--primary)' }}>
+                      {currentUser?.profileImage ? (
+                        <img src={currentUser.profileImage} alt="Me" className="w-full h-full object-cover" />
+                      ) : (
+                        <User className="w-5 h-5" />
+                      )}
                     </div>
                     <div>
                       <p className="text-[9px] font-black uppercase tracking-widest opacity-60 mb-0.5" style={{ color: 'var(--primary-deep)' }}>
                         {userId ? 'My Account' : 'Sanctuary'}
                       </p>
-                      <h4 className="font-bold text-sm break-all" style={{ color: 'var(--primary-deep)' }}>
-                        {userId ? email : 'Visit Profile'}
-                      </h4>
-                      {userId && (
+                      <div className="flex items-center gap-1.5 group/mname" onClick={() => { setTempName(currentUser?.username || email?.split('@')[0] || ""); setIsEditingName(true); }}>
+                        <h4 className="font-bold text-sm truncate" style={{ color: 'var(--primary-deep)' }}>
+                          {currentUser?.username || email?.split('@')[0]}
+                        </h4>
+                        {userId && <Pencil className="w-2.5 h-2.5 opacity-20 group-hover/mname:opacity-60 transition-opacity" style={{ color: 'var(--primary-deep)' }} />}
+                      </div>
+                      {userId && isEditingName && (
+                        <p className="text-[10px] text-rose-500 font-bold uppercase tracking-tight mt-1">Visit Desktop to edit name</p>
+                      )}
+                      {userId && !isEditingName && (
                         <p className="text-[10px] opacity-40 truncate" style={{ color: 'var(--primary-deep)' }}>
-                          {email?.split('@')[0]}
+                          {email}
                         </p>
                       )}
                     </div>

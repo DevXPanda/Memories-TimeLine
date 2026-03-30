@@ -139,6 +139,8 @@ export const listFriends = query({
             _id: friend._id,
             email: "Hidden User",
             uniqueId: "RESTRICTED",
+            chatUsername: undefined,
+            username: undefined,
             friendshipId: f._id,
             status: "blocked_by_other"
           });

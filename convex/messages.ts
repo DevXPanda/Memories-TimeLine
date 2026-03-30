@@ -6,7 +6,10 @@ export const send = mutation({
   args: { 
     senderId: v.id("users"), 
     receiverId: v.id("users"), 
-    content: v.string() 
+    content: v.string(),
+    encryptedKey: v.string(),
+    senderEncryptedKey: v.string(),
+    iv: v.string(),
   },
   handler: async (ctx, args) => {
     // Basic verification: Check if they are friends (optional but better)
@@ -17,6 +20,9 @@ export const send = mutation({
       content: args.content,
       status: "sent",
       createdAt: Date.now(),
+      encryptedKey: args.encryptedKey,
+      senderEncryptedKey: args.senderEncryptedKey,
+      iv: args.iv,
     });
 
     // New: Trigger global notification for the receiver

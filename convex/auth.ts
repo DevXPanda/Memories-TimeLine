@@ -1,5 +1,5 @@
 import { mutation, query } from "./_generated/server";
-import { v } from "convex/values";
+import { ConvexError, v } from "convex/values";
 
 // Generate a random 6-digit OTP
 const generateOTP = () => {
@@ -145,5 +145,83 @@ export const getUser = query({
   handler: async (ctx, args) => {
     if (!args.userId) return null;
     return await ctx.db.get(args.userId);
+  },
+});
+
+export const setPublicKey = mutation({
+  args: { userId: v.id("users"), publicKey: v.string() },
+  handler: async (ctx, args) => {
+    await ctx.db.patch(args.userId, { publicKey: args.publicKey });
+    return { status: "public_key_set" };
+  },
+});
+
+export const generateUploadUrl = mutation(async (ctx) => {
+  return await ctx.storage.generateUploadUrl();
+});
+
+export const updateProfileImage = mutation({
+  args: { userId: v.id("users"), storageId: v.id("_storage") },
+  handler: async (ctx, args) => {
+    const user = await ctx.db.get(args.userId);
+    if (!user) throw new Error("User not found");
+
+    const imageUrl = await ctx.storage.getUrl(args.storageId);
+    if (!imageUrl) throw new Error("Image not found");
+
+    // Clean up old image if it exists in storage
+    if (user.profileImageStorageId) {
+      try {
+        await ctx.storage.delete(user.profileImageStorageId);
+      } catch (e) {
+        console.error("Failed to delete old profile image", e);
+      }
+    }
+
+    await ctx.db.patch(args.userId, {
+      profileImage: imageUrl,
+      profileImageStorageId: args.storageId,
+    });
+    return { imageUrl };
+  },
+});
+
+export const updateUserName = mutation({
+  args: { userId: v.id("users"), username: v.string() },
+  handler: async (ctx, args) => {
+    const username = args.username.trim();
+    if (!username) throw new ConvexError("Username cannot be empty");
+    
+    const existing = await ctx.db
+      .query("users")
+      .withIndex("by_username", (q) => q.eq("username", username))
+      .unique();
+
+    if (existing && existing._id !== args.userId) {
+      throw new ConvexError("this user name exist");
+    }
+
+    await ctx.db.patch(args.userId, { username });
+    return { status: "success" };
+  },
+});
+
+export const updateChatUserName = mutation({
+  args: { userId: v.id("users"), chatUsername: v.string() },
+  handler: async (ctx, args) => {
+    const chatUsername = args.chatUsername.trim();
+    if (!chatUsername) throw new ConvexError("Username cannot be empty");
+
+    const existing = await ctx.db
+      .query("users")
+      .withIndex("by_chatUsername", (q) => q.eq("chatUsername", chatUsername))
+      .unique();
+
+    if (existing && existing._id !== args.userId) {
+      throw new ConvexError("this user name exist");
+    }
+
+    await ctx.db.patch(args.userId, { chatUsername });
+    return { status: "success" };
   },
 });

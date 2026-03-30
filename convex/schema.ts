@@ -48,13 +48,20 @@ export default defineSchema({
   users: defineTable({
     email: v.string(),
     uniqueId: v.optional(v.string()), // e.g. U27032026
+    username: v.optional(v.string()), // Global display name
+    chatUsername: v.optional(v.string()), // Chat-specific display name
     privatePin: v.optional(v.string()), // 4-6 digit chosen pin
     isVerified: v.boolean(),
     otp: v.optional(v.string()),
     otpExpires: v.optional(v.number()),
+    publicKey: v.optional(v.string()),
+    profileImage: v.optional(v.string()),
+    profileImageStorageId: v.optional(v.id("_storage")),
   })
     .index("by_email", ["email"])
-    .index("by_uniqueId", ["uniqueId"]),
+    .index("by_uniqueId", ["uniqueId"])
+    .index("by_username", ["username"])
+    .index("by_chatUsername", ["chatUsername"]),
 
   friendships: defineTable({
     user1Id: v.id("users"),
@@ -72,9 +79,12 @@ export default defineSchema({
   messages: defineTable({
     senderId: v.id("users"),
     receiverId: v.id("users"),
-    content: v.string(),
+    content: v.string(), // AES encrypted ciphertext
     status: v.string(), // "sent", "delivered", "read"
     createdAt: v.number(),
+    encryptedKey: v.optional(v.string()), // AES key encrypted for receiver (RSA)
+    senderEncryptedKey: v.optional(v.string()), // AES key encrypted for sender (RSA)
+    iv: v.optional(v.string()), // AES Initialization Vector
   })
     .index("by_conversation", ["senderId", "receiverId"])
     .index("by_receiver", ["receiverId", "status"]),
