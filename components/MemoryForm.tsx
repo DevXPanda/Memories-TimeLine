@@ -6,7 +6,7 @@ import { Id } from "@/convex/_generated/dataModel";
 import {
   Sparkles, X, MapPin, Calendar, Clock,
   Tag, Heart, Loader2, Image as ImageIcon, Hash, ChevronRight, Check,
-  Lock, Users
+  Lock, Users, Trash2 as Trash2Icon
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { MOODS, CATEGORIES } from "@/lib/constants";
@@ -115,50 +115,52 @@ export default function MemoryForm({ initialData, mode = "create" }: Props) {
     }
   };
 
-  return (
-    <div className="glass-strong rounded-[40px] p-6 sm:p-12 border shadow-2xl overflow-hidden relative" style={{ borderColor: "var(--border-glass)" }}>
-      {/* Background accents */}
-      <div className="absolute top-0 right-0 w-64 h-64 opacity-5 pointer-events-none -mr-32 -mt-32 rounded-full" style={{ background: "var(--primary)" }} />
-      <div className="absolute bottom-0 left-0 w-64 h-64 opacity-5 pointer-events-none -ml-32 -mb-32 rounded-full" style={{ background: "var(--primary)" }} />
+  const labelStyle = { color: "var(--text-main)", opacity: 0.5 };
 
-      {/* Hero Header */}
-      <div className="mb-10 text-center">
-         <h2 className="text-3xl sm:text-4xl font-bold mb-3" style={{ fontFamily: "var(--font-serif)", color: "var(--primary-deep)" }}>
+  return (
+    <div className="glass-strong rounded-[28px] p-6 sm:p-8 border shadow-xl overflow-hidden relative max-w-6xl mx-auto" style={{ borderColor: "var(--border-glass)" }}>
+      {/* Background accents */}
+      <div className="absolute top-0 right-0 w-48 h-48 opacity-5 pointer-events-none -mr-24 -mt-24 rounded-full" style={{ background: "var(--primary)" }} />
+      <div className="absolute bottom-0 left-0 w-48 h-48 opacity-5 pointer-events-none -ml-24 -mb-24 rounded-full" style={{ background: "var(--primary)" }} />
+
+      {/* Header */}
+      <div className="mb-8 text-center">
+         <h2 className="text-2xl sm:text-3xl font-bold mb-1" style={{ fontFamily: "var(--font-serif)", color: "var(--primary-deep)" }}>
            {mode === "create" ? "Capture a Heartfelt Moment" : "Refine Your Story"}
          </h2>
-         <p className="text-sm font-medium opacity-60" style={{ color: "var(--text-muted)" }}>Every memory deserves to be preserved with love.</p>
+         <p className="text-[11px] font-bold opacity-40 uppercase tracking-widest" style={{ color: "var(--text-muted)" }}>Preserving your shared story forever.</p>
       </div>
 
-      <div className="space-y-10 relative z-10">
-        {/* ── Image upload ── */}
-        <div>
-          <label className="block text-[10px] font-black uppercase tracking-[0.2em] mb-4 opacity-40" style={{ color: "var(--text-main)" }}>The Visual</label>
-          <div className="relative">
+      <div className="flex flex-col lg:flex-row gap-8 lg:gap-10 relative z-10">
+        {/* LEFT SIDE: Image upload */}
+        <div className="w-full lg:w-[300px] xl:w-[340px] shrink-0 flex flex-col">
+          <label className="block text-[9px] font-black uppercase tracking-[0.2em] mb-3 ml-1" style={labelStyle}>The Visual</label>
+          <div className="relative flex-1 flex flex-col min-h-[350px] lg:min-h-[440px]">
             {imagePreview ? (
               <motion.div 
-                initial={{ opacity: 0, scale: 0.95 }}
+                initial={{ opacity: 0, scale: 0.98 }}
                 animate={{ opacity: 1, scale: 1 }}
-                className="relative rounded-[32px] overflow-hidden h-[300px] border shadow-xl group" 
+                className="relative flex-1 rounded-[20px] overflow-hidden border shadow-inner group w-full" 
                 style={{ borderColor: "var(--border-glass-strong)" }}>
-                <img src={imagePreview} alt="Preview" className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
-                <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                <img src={imagePreview} alt="Preview" className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
+                <div className="absolute inset-0 bg-black/10 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                    <button onClick={() => { setImageFile(null); setImagePreview(""); }}
-                     className="w-12 h-12 rounded-full bg-white text-red-500 shadow-xl flex items-center justify-center hover:scale-110 transition-transform">
-                     <Trash2Icon className="w-5 h-5" />
+                     className="w-10 h-10 rounded-full text-red-500 shadow-lg flex items-center justify-center hover:scale-110 transition-transform" style={{ background: "var(--bg-glass-strong)" }}>
+                     <Trash2Icon className="w-4 h-4" />
                    </button>
                 </div>
               </motion.div>
             ) : (
               <button 
                 onClick={() => fileRef.current?.click()}
-                className="w-full h-[200px] rounded-[32px] flex flex-col items-center justify-center gap-4 transition-all duration-300 border-2 border-dashed group hover:shadow-lg"
+                className="w-full flex-1 min-h-[350px] lg:min-h-[440px] rounded-[20px] flex flex-col items-center justify-center gap-3 transition-all duration-300 border-[1.5px] border-dashed group hover:shadow-inner"
                 style={{ borderColor: "var(--border-glass-strong)", background: "var(--primary-blush)" }}>
-                <div className="w-14 h-14 rounded-full glass flex items-center justify-center shadow-sm group-hover:scale-110 transition-transform" style={{ color: "var(--primary)" }}>
-                   <ImageIcon className="w-7 h-7" />
+                <div className="w-12 h-12 rounded-full glass flex items-center justify-center shadow-sm group-hover:scale-110 transition-transform" style={{ color: "var(--primary)" }}>
+                   <ImageIcon className="w-6 h-6" />
                 </div>
                 <div className="text-center">
-                   <p className="text-sm font-bold" style={{ color: "var(--primary-deep)" }}>Add a Photo</p>
-                   <p className="text-xs opacity-40 font-bold uppercase tracking-widest mt-1">High quality moments (max 10MB)</p>
+                   <p className="text-xs font-bold" style={{ color: "var(--primary-deep)" }}>Add a Photo</p>
+                   <p className="text-[9px] opacity-40 font-bold uppercase tracking-widest mt-1 px-4">Moments up to 10MB</p>
                 </div>
               </button>
             )}
@@ -166,64 +168,65 @@ export default function MemoryForm({ initialData, mode = "create" }: Props) {
           </div>
         </div>
 
-        {/* ── Core Details ── */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-           <div className="space-y-6">
+        {/* RIGHT SIDE: Form details */}
+        <div className="flex-1 space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+           <div className="space-y-4">
               <div>
-                <label className="block text-[10px] font-black uppercase tracking-[0.2em] mb-3 ml-1 opacity-40" style={{ color: "var(--text-main)" }}>Story Title *</label>
-                <input className="input-rose text-lg h-14 rounded-2xl" placeholder="e.g. Our First Date 🌹" value={form.title}
+                <label className="block text-[9px] font-black uppercase tracking-[0.2em] mb-2 ml-1" style={labelStyle}>Story Title *</label>
+                <input className="input-rose text-xs h-10 rounded-xl" placeholder="e.g. Our First Date 🌹" value={form.title}
                   onChange={(e) => set("title", e.target.value)} />
               </div>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-[10px] font-black uppercase tracking-[0.2em] mb-3 ml-1 opacity-40" style={{ color: "var(--text-main)" }}>Date Captured *</label>
-                  <input type="date" className="input-rose h-14 rounded-2xl" value={form.date}
+                  <label className="block text-[9px] font-black uppercase tracking-[0.2em] mb-2 ml-1" style={labelStyle}>Date *</label>
+                  <input type="date" className="input-rose text-[11px] h-10 rounded-xl" value={form.date}
                     onChange={(e) => set("date", e.target.value)} />
                 </div>
                 <div>
-                  <label className="block text-[10px] font-black uppercase tracking-[0.2em] mb-3 ml-1 opacity-40" style={{ color: "var(--text-main)" }}>Time (Optional)</label>
-                  <input type="time" className="input-rose h-14 rounded-2xl" value={form.time}
+                  <label className="block text-[9px] font-black uppercase tracking-[0.2em] mb-2 ml-1" style={labelStyle}>Time</label>
+                  <input type="time" className="input-rose text-[11px] h-10 rounded-xl" value={form.time}
                     onChange={(e) => set("time", e.target.value)} />
                 </div>
               </div>
               <div>
-                <label className="block text-[10px] font-black uppercase tracking-[0.2em] mb-3 ml-1 opacity-40" style={{ color: "var(--text-main)" }}>Location Spotlight</label>
+                <label className="block text-[9px] font-black uppercase tracking-[0.2em] mb-2 ml-1" style={labelStyle}>Location Spotlight</label>
                 <div className="relative">
-                   <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 opacity-30" />
-                   <input className="input-rose h-14 pl-11 rounded-2xl" placeholder="Where did it happen?" value={form.location}
-                     onChange={(e) => set("location", e.target.value)} />
+                   <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 opacity-30" />
+                   <input className="input-rose h-10 text-xs rounded-xl" placeholder="Where did it happen?" value={form.location}
+                     onChange={(e) => set("location", e.target.value)} style={{ paddingLeft: '32px' }} />
                 </div>
               </div>
            </div>
 
-           <div className="space-y-6">
+           <div className="space-y-5">
               <div>
-                 <label className="block text-[10px] font-black uppercase tracking-[0.2em] mb-4 ml-1 opacity-40" style={{ color: "var(--text-main)" }}>The Vibe (Mood)</label>
-                 <div className="flex flex-wrap gap-2.5">
+                 <label className="block text-[9px] font-black uppercase tracking-[0.2em] mb-2.5 ml-1" style={labelStyle}>The Vibe (Mood)</label>
+                 <div className="flex flex-wrap gap-1.5">
                    {MOODS.map((m) => (
                      <button key={m.value}
                        onClick={() => set("mood", form.mood === m.value ? "" : m.value)}
-                       className="flex items-center gap-2 px-4 py-2.5 rounded-2xl text-xs font-bold transition-all border shadow-sm"
+                       className="flex items-center gap-1 px-2.5 py-1 rounded-lg text-[9px] font-bold transition-all border shadow-sm"
                        style={{
-                         background: form.mood === m.value ? "var(--primary)" : "white",
-                         color: form.mood === m.value ? "white" : "var(--primary-deep)",
+                         background: form.mood === m.value ? "var(--primary)" : "var(--bg-glass-strong)",
+                         color: form.mood === m.value ? "white" : "var(--text-main)",
                          borderColor: form.mood === m.value ? "var(--primary)" : "var(--border-glass)",
                        }}>
-                       <span className="text-sm">{m.emoji}</span> {m.label}
+                       <span className="text-xs">{m.emoji}</span> {m.label}
                      </button>
                    ))}
                  </div>
               </div>
               <div>
-                 <label className="block text-[10px] font-black uppercase tracking-[0.2em] mb-4 ml-1 opacity-40" style={{ color: "var(--text-main)" }}>Memory Type</label>
-                 <div className="flex flex-wrap gap-2.5">
+                 <label className="block text-[9px] font-black uppercase tracking-[0.2em] mb-2.5 ml-1" style={labelStyle}>Memory Type</label>
+                 <div className="flex flex-wrap gap-1.5">
                    {CATEGORIES.map((cat) => (
                      <button key={cat}
                        onClick={() => set("category", form.category === cat ? "" : cat)}
-                       className="px-4 py-2.5 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all border shadow-sm"
+                       className="px-2.5 py-1 rounded-lg text-[8px] font-black uppercase tracking-widest transition-all border shadow-sm"
                        style={{
-                         background: form.category === cat ? "var(--primary-soft)" : "white",
-                         color: form.category === cat ? "white" : "var(--text-light)",
+                         background: form.category === cat ? "var(--primary-soft)" : "var(--bg-glass-strong)",
+                         color: form.category === cat ? "white" : "var(--text-main)",
                          borderColor: form.category === cat ? "var(--primary-soft)" : "var(--border-glass)",
                        }}>
                        {cat}
@@ -232,125 +235,87 @@ export default function MemoryForm({ initialData, mode = "create" }: Props) {
                  </div>
               </div>
            </div>
-        </div>
+          </div>
 
-        {/* ── Storytelling ── */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-           <div>
-             <label className="block text-[10px] font-black uppercase tracking-[0.2em] mb-3 ml-1 opacity-40" style={{ color: "var(--text-main)" }}>Story Details *</label>
-             <textarea className="input-rose min-h-[180px] rounded-[24px] p-5 border-2" placeholder="Start writing the story behind this moment..." 
-               value={form.caption} onChange={(e) => set("caption", e.target.value)} />
-           </div>
-           <div>
-             <label className="block text-[10px] font-black uppercase tracking-[0.2em] mb-3 ml-1 opacity-40" style={{ color: "var(--text-main)" }}>Dil&apos;s Personal Note</label>
-             <div className="relative">
-                <Sparkles className="absolute top-4 right-4 w-5 h-5 text-rose-300 pointer-events-none" />
-                <textarea className="input-rose min-h-[180px] rounded-[24px] p-5 italic border-2"
-                  placeholder="A romantic or heartfelt addition to this memory..."
-                  value={aiCaption} onChange={(e) => setAiCaption(e.target.value)}
-                  style={{ fontFamily: "var(--font-script)", fontSize: "1.2rem", lineHeight: "1.6", color: "var(--primary-deep)" }} />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+             <div>
+               <label className="block text-[9px] font-black uppercase tracking-[0.2em] mb-2 ml-1" style={labelStyle}>Story Details *</label>
+               <textarea className="input-rose min-h-[100px] rounded-xl p-3 text-xs" placeholder="Start writing the story behind this moment..." 
+                 value={form.caption} onChange={(e) => set("caption", e.target.value)} />
              </div>
-           </div>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-start">
-           <div>
-             <label className="block text-[10px] font-black uppercase tracking-[0.2em] mb-3 ml-1 opacity-40" style={{ color: "var(--text-main)" }}>Tags & Keywords</label>
-             <div className="flex gap-2">
-                <div className="relative flex-1">
-                   <Hash className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 opacity-30" />
-                   <input className="input-rose h-12 pl-11 rounded-xl text-sm" placeholder="nature, movie, first..." value={tagInput}
-                     onChange={(e) => setTagInput(e.target.value)} 
-                     onKeyDown={(e) => { if (e.key === "Enter" || e.key === ",") { e.preventDefault(); addTag(); } }} />
-                </div>
-                <button type="button" onClick={addTag} className="btn-ghost px-5 rounded-xl text-xs font-bold uppercase tracking-widest">Add</button>
-             </div>
-             {tags.length > 0 && (
-               <div className="flex flex-wrap gap-2 mt-4">
-                 {tags.map((t) => (
-                   <span key={t} className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold glass-strong border"
-                     style={{ color: "var(--primary)", borderColor: "var(--border-glass)" }}>
-                     #{t}
-                     <button type="button" onClick={() => setTags((prev) => prev.filter((x) => x !== t))} className="opacity-50 hover:opacity-100 transition-opacity">
-                        <X className="w-3 h-3" />
-                     </button>
-                   </span>
-                 ))}
+             <div>
+               <label className="block text-[9px] font-black uppercase tracking-[0.2em] mb-2 ml-1" style={labelStyle}>Dil&apos;s Personal Note</label>
+               <div className="relative">
+                  <Sparkles className="absolute top-2 right-2 w-3.5 h-3.5 text-rose-300 pointer-events-none" />
+                  <textarea className="input-rose min-h-[100px] rounded-xl p-3 italic text-xs"
+                    placeholder="A romantic addition..."
+                    value={aiCaption} onChange={(e) => setAiCaption(e.target.value)}
+                    style={{ fontFamily: "var(--font-script)", fontSize: "1rem", lineHeight: "1.3", color: "var(--primary-deep)" }} />
                </div>
-             )}
-           </div>
+             </div>
+          </div>
 
-           <div className="space-y-4">
-              <label className="block text-[10px] font-black uppercase tracking-[0.2em] mb-3 ml-1 opacity-40" style={{ color: "var(--text-main)" }}>Privacy & Highlighting</label>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <button type="button" onClick={() => set("isFavorite", !form.isFavorite)}
-                  className="flex items-center justify-between px-6 py-4 rounded-[24px] transition-all shadow-sm border"
-                  style={{ 
-                    background: form.isFavorite ? "var(--primary-blush)" : "white",
-                    borderColor: form.isFavorite ? "var(--primary)" : "var(--border-glass)"
-                  }}>
-                  <div className="flex items-center gap-3">
-                     <div className={`w-10 h-10 rounded-2xl flex items-center justify-center transition-all ${form.isFavorite ? 'bg-white shadow-md' : 'glass'}`}>
-                       <Heart className={`w-5 h-5 transition-all ${form.isFavorite ? "text-rose-500 fill-rose-500 scale-110" : "text-rose-300"}`} />
-                     </div>
-                     <span className="text-sm font-bold" style={{ color: form.isFavorite ? "var(--primary-deep)" : "var(--text-light)" }}>
-                       {form.isFavorite ? "Favorite" : "Highlight"}
-                     </span>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-5 items-end">
+             <div>
+               <label className="block text-[9px] font-black uppercase tracking-[0.2em] mb-2 ml-1" style={labelStyle}>Tags & Keywords</label>
+               <div className="flex gap-2">
+                  <div className="relative flex-1">
+                     <Hash className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 opacity-30" />
+                     <input className="input-rose h-9 rounded-xl text-xs" placeholder="nature, movie..." value={tagInput}
+                       onChange={(e) => setTagInput(e.target.value)} 
+                       onKeyDown={(e) => { if (e.key === "Enter" || e.key === ",") { e.preventDefault(); addTag(); } }}
+                       style={{ paddingLeft: '32px' }} />
                   </div>
-                  {form.isFavorite && <Check className="w-5 h-5 text-rose-500" />}
-                </button>
+                  <button type="button" onClick={addTag} className="btn-ghost px-3 h-9 text-[9px] font-black uppercase">Add</button>
+               </div>
+             </div>
 
-                <div className="flex bg-white rounded-[24px] p-1.5 border shadow-sm" style={{ borderColor: 'var(--border-glass)' }}>
-                   <button type="button" onClick={() => set("visibility", "private")}
-                     className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all"
-                     style={{ 
-                       background: form.visibility === 'private' ? 'var(--primary-deep)' : 'transparent',
-                       color: form.visibility === 'private' ? 'white' : 'var(--text-muted)'
-                     }}>
-                     <Lock className="w-3.5 h-3.5" /> Private
-                   </button>
-                   <button type="button" onClick={() => set("visibility", "friends")}
-                     className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all"
-                     style={{ 
-                       background: form.visibility === 'friends' ? 'var(--primary)' : 'transparent',
-                       color: form.visibility === 'friends' ? 'white' : 'var(--text-muted)'
-                     }}>
-                     <Users className="w-3.5 h-3.5" /> Friends
-                   </button>
+             <div className="space-y-3">
+                <label className="block text-[9px] font-black uppercase tracking-[0.2em] mb-2 ml-1" style={labelStyle}>Privacy & Highlighting</label>
+                <div className="flex gap-2">
+                  <button type="button" onClick={() => set("isFavorite", !form.isFavorite)}
+                    className="flex-1 flex items-center justify-center gap-1.5 px-3 h-9 rounded-xl transition-all border shadow-sm"
+                    style={{ 
+                      background: form.isFavorite ? "var(--primary-blush)" : "var(--bg-glass-strong)",
+                      borderColor: form.isFavorite ? "var(--primary)" : "var(--border-glass)"
+                    }}>
+                    <Heart className={`w-3.5 h-3.5 ${form.isFavorite ? "text-rose-500 fill-rose-500" : "text-rose-300"}`} />
+                    <span className="text-[10px] font-bold" style={{ color: "var(--text-main)" }}>Highlight</span>
+                  </button>
+
+                  <div className="flex-1 flex rounded-xl p-0.5 border shadow-sm" style={{ borderColor: 'var(--border-glass)', background: 'var(--bg-glass-strong)' }}>
+                     <button type="button" onClick={() => set("visibility", "private")}
+                       className="flex-1 flex items-center justify-center gap-1 py-1 rounded-lg text-[8px] font-black uppercase transition-all"
+                       style={{ 
+                         background: form.visibility === 'private' ? 'var(--primary-deep)' : 'transparent',
+                         color: form.visibility === 'private' ? 'white' : 'var(--text-muted)'
+                       }}>
+                       <Lock className="w-2.5 h-2.5" /> Private
+                     </button>
+                     <button type="button" onClick={() => set("visibility", "friends")}
+                       className="flex-1 flex items-center justify-center gap-1 py-1 rounded-lg text-[8px] font-black uppercase transition-all"
+                       style={{ 
+                         background: form.visibility === 'friends' ? 'var(--primary)' : 'transparent',
+                         color: form.visibility === 'friends' ? 'white' : 'var(--text-muted)'
+                       }}>
+                       <Users className="w-2.5 h-2.5" /> Friends
+                     </button>
+                  </div>
                 </div>
-              </div>
-           </div>
-        </div>
+             </div>
+          </div>
 
-        {/* ── Error & Actions ── */}
-        <div className="pt-10 border-t flex flex-col gap-6" style={{ borderColor: "var(--border-glass-strong)" }}>
-           {error && (
-             <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
-               className="px-6 py-4 rounded-2xl text-sm font-bold flex items-center gap-3 border shadow-lg"
-               style={{ background: "#fff5f5", color: "#c53030", borderColor: "#feb2b2" }}>
-               <div className="w-6 h-6 rounded-full bg-red-100 flex items-center justify-center text-red-600">✗</div>
-               {error}
-             </motion.div>
-           )}
-
-           <div className="flex gap-4">
-             <button onClick={() => router.back()} className="btn-ghost flex-1 py-4 text-sm font-bold uppercase tracking-widest rounded-2xl">Cancel</button>
-             <button onClick={handleSubmit} disabled={saving} className="btn-primary flex-[2] justify-center py-4 text-base font-bold rounded-2xl shadow-xl">
-               {saving ? (
-                 <><Loader2 className="w-5 h-5 animate-spin mr-2" /> Saving Forever...</>
-               ) : (
-                 <><Heart className="w-5 h-5 mr-2" /> {mode === "edit" ? "Update Memory" : "Seal the Memory"}</>
-               )}
-             </button>
-           </div>
+          {/* Footer Actions */}
+          <div className="pt-5 border-t flex flex-col gap-4" style={{ borderColor: "var(--border-glass-strong)" }}>
+             <div className="flex gap-3 justify-end">
+               <button onClick={() => router.back()} className="btn-ghost px-5 h-9 text-[9px] font-black uppercase tracking-widest rounded-xl">Cancel</button>
+               <button onClick={handleSubmit} disabled={saving} className="btn-primary px-8 h-9 text-[11px] font-extrabold rounded-xl shadow-lg">
+                 {saving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : "Seal the Memory"}
+               </button>
+             </div>
+          </div>
         </div>
       </div>
     </div>
-  );
-}
-
-function Trash2Icon(props: any) {
-  return (
-    <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" x2="10" y1="11" y2="17"/><line x1="14" x2="14" y1="11" y2="17"/></svg>
   );
 }

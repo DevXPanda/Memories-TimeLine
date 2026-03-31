@@ -242,62 +242,52 @@ export default function FriendsPage() {
                         {/* Top: Avatar & Identity */}
                         <div className="flex items-center justify-between gap-4 relative z-10 w-full">
                            <div className="flex items-center gap-4 flex-1 min-w-0">
-                              <div className="w-14 h-14 rounded-2xl bg-white flex items-center justify-center shadow-lg relative border border-rose-50/50 group-hover:scale-105 group-hover:rotate-3 transition-transform duration-500 shrink-0">
-                                  <User className="w-7 h-7 opacity-10" />
-                                  <div className="absolute -top-1 -right-1 w-3.5 h-3.5 rounded-full bg-green-500 border-[3px] border-white shadow-sm" />
-                              </div>
-                              <div className="space-y-0.5 overflow-hidden">
-                                 <h4 className="font-black text-lg tracking-tight truncate group-hover:text-rose-500 transition-colors" style={{ color: 'var(--primary-deep)' }}>
-                                    {f.email.split('@')[0]}
-                                 </h4>
-                                 <p className="text-[9px] font-black tracking-[0.2em] opacity-30 uppercase font-mono">{f.uniqueId}</p>
-                              </div>
+                               <div className="w-14 h-14 rounded-2xl bg-white flex items-center justify-center shadow-lg relative border border-rose-50/50 group-hover:scale-105 group-hover:rotate-3 transition-transform duration-500 shrink-0">
+                                   <User className="w-7 h-7 opacity-10" />
+                                   <div className="absolute -top-1 -right-1 w-3.5 h-3.5 rounded-full bg-green-500 border-[3px] border-white shadow-sm" />
+                               </div>
+                               <div className="space-y-0.5 overflow-hidden">
+                                  <h4 className="font-black text-lg tracking-tight truncate group-hover:text-rose-500 transition-colors" style={{ color: 'var(--primary-deep)' }}>
+                                     {f.email.split('@')[0]}
+                                  </h4>
+                                  <p className="text-[9px] font-black tracking-[0.2em] opacity-30 uppercase font-mono">{f.uniqueId}</p>
+                               </div>
                            </div>
 
                            <div className="flex items-center gap-2">
-                              <button 
-                                 onClick={() => setActiveChat({ friendId: f._id, friendName: f.email.split('@')[0] })}
-                                 className="w-10 h-10 rounded-xl glass border flex items-center justify-center shadow-md hover:bg-emerald-500 hover:text-white transition-all group/msg" style={{ borderColor: 'var(--border-glass)' }}>
-                                  <MessageSquare className="w-4.5 h-4.5 opacity-40 group-hover/msg:opacity-100" />
-                               </button>
-
-                               <Link href="/timeline" className="w-10 h-10 rounded-xl glass border flex items-center justify-center shadow-md hover:bg-slate-800 hover:text-white transition-all group/clk" style={{ borderColor: 'var(--border-glass)' }}>
-                                 <Clock className="w-4.5 h-4.5 opacity-40 group-hover/clk:opacity-100" />
-                              </Link>
-                              
-                              <button 
-                                onClick={() => { 
-                                  confirm({
-                                    title: "Block Connection?",
-                                    message: "Are you sure you want to block this member? This action is permanent. 🔒",
-                                    confirmText: "Block Member",
-                                    type: "danger",
-                                    onConfirm: () => {
-                                      blockFriend({ friendshipId: f.friendshipId, userId: userId! });
-                                      toast("Connection blocked successfully", "success");
-                                    }
-                                  });
-                                }}
-                                className="w-10 h-10 rounded-xl glass border flex items-center justify-center shadow-md hover:bg-rose-600 hover:text-white transition-all group/blk" style={{ borderColor: 'var(--border-glass)' }}>
-                                 <Ban className="w-4 h-4 opacity-40 group-hover/blk:opacity-100" />
-                              </button>
-
-                              <button 
+                               <button 
                                  onClick={() => { 
                                    confirm({
-                                    title: "Remove Friend?",
-                                    message: "End this sanctuary connection? You can re-invite them later if you change your mind. 🏃‍♂️",
-                                    confirmText: "Remove Connection",
-                                    type: "danger",
-                                    onConfirm: () => {
-                                      removeFriend({ friendshipId: f.friendshipId });
-                                      toast("Friend removed from circle", "info");
-                                    }
-                                  });
+                                     title: "Block Connection?",
+                                     message: "Are you sure you want to block this member? This action is permanent. 🔒",
+                                     confirmText: "Block Member",
+                                     type: "danger",
+                                     onConfirm: () => {
+                                       blockFriend({ friendshipId: f.friendshipId, userId: userId! });
+                                       toast("Connection blocked successfully", "success");
+                                     }
+                                   });
                                  }}
-                                 className="w-10 h-10 rounded-xl glass border flex items-center justify-center shadow-md hover:bg-rose-500 hover:text-white transition-all group/rmv" style={{ borderColor: 'var(--border-glass)' }}>
-                                 <UserMinus className="w-4 h-4 opacity-40 group-hover/rmv:opacity-100" />
-                              </button>
+                                 className="w-10 h-10 rounded-xl glass border flex items-center justify-center shadow-md hover:bg-rose-600 hover:text-white transition-all group/blk" style={{ borderColor: 'var(--border-glass)' }}>
+                                  <Ban className="w-4 h-4 opacity-40 group-hover/blk:opacity-100" />
+                               </button>
+
+                               <button 
+                                  onClick={() => { 
+                                    confirm({
+                                     title: "Remove Friend?",
+                                     message: "End this sanctuary connection? You can re-invite them later if you change your mind. 🏃‍♂️",
+                                     confirmText: "Remove Connection",
+                                     type: "danger",
+                                     onConfirm: () => {
+                                       removeFriend({ friendshipId: f.friendshipId });
+                                       toast("Friend removed from circle", "info");
+                                     }
+                                   });
+                                  }}
+                                  className="w-10 h-10 rounded-xl glass border flex items-center justify-center shadow-md hover:bg-rose-500 hover:text-white transition-all group/rmv" style={{ borderColor: 'var(--border-glass)' }}>
+                                  <UserMinus className="w-4 h-4 opacity-40 group-hover/rmv:opacity-100" />
+                               </button>
                            </div>
                         </div>
 
@@ -309,7 +299,7 @@ export default function FriendsPage() {
                                  <input 
                                    type="checkbox" 
                                    checked={f.friendAccessToMe.includes("all")} 
-                                   onChange={(e) => updateAccess({ userId: userId!, friendshipId: f.friendshipId, access: e.target.checked ? ["all"] : ["memories", "timeline", "events"] })}
+                                   onChange={(e) => updateAccess({ userId: userId!, friendshipId: f.friendshipId, access: e.target.checked ? ["all"] : ["memories", "events"] })}
                                    className="hidden" 
                                  />
                                  <div className={`w-8 h-4 rounded-full relative transition-all ${f.friendAccessToMe.includes("all") ? 'bg-indigo-500' : 'bg-gray-200'}`}>
@@ -328,17 +318,7 @@ export default function FriendsPage() {
                                     const current = f.friendAccessToMe.filter((a: string) => a !== "all");
                                     const next = current.includes("memories") ? current.filter((a: string) => a !== "memories") : [...current, "memories"];
                                     updateAccess({ userId: userId!, friendshipId: f.friendshipId, access: next });
-                                 }}
-                              />
-                              <AccessButton 
-                                 active={f.friendAccessToMe.includes("timeline") || f.friendAccessToMe.includes("all")} 
-                                 icon={Users} label="Timeline"
-                                 onClick={() => {
-                                    if (f.friendAccessToMe.includes("all")) return;
-                                    const current = f.friendAccessToMe.filter((a: string) => a !== "all");
-                                    const next = current.includes("timeline") ? current.filter((a: string) => a !== "timeline") : [...current, "timeline"];
-                                    updateAccess({ userId: userId!, friendshipId: f.friendshipId, access: next });
-                                 }}
+                                  }}
                               />
                               <AccessButton 
                                  active={f.friendAccessToMe.includes("events") || f.friendAccessToMe.includes("all")} 
@@ -348,7 +328,7 @@ export default function FriendsPage() {
                                     const current = f.friendAccessToMe.filter((a: string) => a !== "all");
                                     const next = current.includes("events") ? current.filter((a: string) => a !== "events") : [...current, "events"];
                                     updateAccess({ userId: userId!, friendshipId: f.friendshipId, access: next });
-                                 }}
+                                  }}
                               />
                            </div>
                         </div>
