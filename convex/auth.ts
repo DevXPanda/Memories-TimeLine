@@ -1,5 +1,7 @@
-import { mutation, query } from "./_generated/server";
+import { mutation, query, action, internalMutation, internalQuery } from "./_generated/server";
 import { ConvexError, v } from "convex/values";
+import bcrypt from "bcryptjs";
+import { internal } from "./_generated/api";
 
 // Generate a random 6-digit OTP
 const generateOTP = () => {
@@ -74,23 +76,44 @@ export const verifyOtp = mutation({
   },
 });
 
-export const setPrivatePin = mutation({
+export const setPrivatePinInternal = internalMutation({
+  args: { userId: v.id("users"), hash: v.string() },
+  handler: async (ctx, args) => {
+    await ctx.db.patch(args.userId, { privatePinHash: args.hash });
+  },
+});
+
+export const setPrivatePin = action({
   args: { userId: v.id("users"), pin: v.string() },
   handler: async (ctx, args) => {
-    await ctx.db.patch(args.userId, { privatePin: args.pin });
+    const salt = await bcrypt.genSalt(10);
+    const hash = await bcrypt.hash(args.pin, salt);
+    await ctx.runMutation(internal.auth.setPrivatePinInternal as any, { userId: args.userId, hash });
     return { status: "pin_set" };
   },
 });
 
-export const login = mutation({
-  args: { email: v.string(), pin: v.string() },
+export const getUserByEmailInternal = internalQuery({
+  args: { email: v.string() },
   handler: async (ctx, args) => {
-    const user = await ctx.db
+    return await ctx.db
       .query("users")
       .withIndex("by_email", (q) => q.eq("email", args.email))
       .unique();
+  },
+});
 
-    if (!user || !user.isVerified || user.privatePin !== args.pin) {
+export const login = action({
+  args: { email: v.string(), pin: v.string() },
+  handler: async (ctx, args) => {
+    const user: any = await ctx.runQuery(internal.auth.getUserByEmailInternal as any, { email: args.email });
+
+    if (!user || !user.isVerified || !user.privatePinHash) {
+      throw new Error("Invalid email or PIN");
+    }
+
+    const isValid = await bcrypt.compare(args.pin, user.privatePinHash);
+    if (!isValid) {
       throw new Error("Invalid email or PIN");
     }
 
@@ -118,23 +141,30 @@ export const forgotPin = mutation({
   },
 });
 
-export const resetPin = mutation({
+export const resetPinInternal = internalMutation({
+  args: { userId: v.id("users"), hash: v.string() },
+  handler: async (ctx, args) => {
+    await ctx.db.patch(args.userId, {
+      privatePinHash: args.hash,
+      otp: undefined,
+      otpExpires: undefined,
+    });
+  },
+});
+
+export const resetPin = action({
   args: { email: v.string(), otp: v.string(), newPin: v.string() },
   handler: async (ctx, args) => {
-    const user = await ctx.db
-      .query("users")
-      .withIndex("by_email", (q) => q.eq("email", args.email))
-      .unique();
+    const user: any = await ctx.runQuery(internal.auth.getUserByEmailInternal as any, { email: args.email });
 
     if (!user || user.otp !== args.otp || (user.otpExpires && user.otpExpires < Date.now())) {
       throw new Error("Invalid or expired OTP");
     }
 
-    await ctx.db.patch(user._id, {
-      privatePin: args.newPin,
-      otp: undefined,
-      otpExpires: undefined,
-    });
+    const salt = await bcrypt.genSalt(10);
+    const hash = await bcrypt.hash(args.newPin, salt);
+
+    await ctx.runMutation(internal.auth.resetPinInternal as any, { userId: user._id, hash });
 
     return { status: "pin_reset", userId: user._id };
   },
@@ -223,5 +253,12 @@ export const updateChatUserName = mutation({
 
     await ctx.db.patch(args.userId, { chatUsername });
     return { status: "success" };
+  },
+});
+
+export const updateLastSeen = mutation({
+  args: { userId: v.id("users") },
+  handler: async (ctx, args) => {
+    await ctx.db.patch(args.userId, { lastSeen: Date.now() });
   },
 });

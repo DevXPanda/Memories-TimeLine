@@ -246,19 +246,19 @@ export default function LoveChatbot() {
   return (
     <>
       <div className="fixed bottom-6 right-6 z-50 flex flex-col items-end gap-3 pointer-events-none">
-        
+
         {/* Shortcut Quick Menu (Drop-up) - VERTICAL */}
         <AnimatePresence>
           {fabOpen && !open && (
-            <motion.div 
-               initial={{ opacity: 0, y: 20, scale: 0.8 }} 
-               animate={{ opacity: 1, y: 0, scale: 1 }} 
-               exit={{ opacity: 0, y: 20, scale: 0.8 }}
-               className="flex flex-col items-end gap-3 mb-2"
+            <motion.div
+              initial={{ opacity: 0, y: 20, scale: 0.8 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: 20, scale: 0.8 }}
+              className="flex flex-col items-end gap-3 mb-2"
             >
               {FAB_ITEMS.map((item, i) => (
-                <Link 
-                  key={item.href} 
+                <Link
+                  key={item.href}
                   href={item.href}
                   className="group flex items-center gap-3 pr-1 pointer-events-auto"
                   onClick={() => setFabOpen(false)}
@@ -279,50 +279,50 @@ export default function LoveChatbot() {
 
         {/* Main Buttons (Stacked Vertically) */}
         {!open && (
-         <button
-           onClick={() => setFabOpen(!fabOpen)}
-           className={`w-14 h-14 rounded-[22px] flex items-center justify-center transition-all shadow-2xl group border border-white/20 pointer-events-auto ${fabOpen ? "rotate-45" : ""}`}
-           style={{ 
-             background: fabOpen ? "var(--text-main)" : "var(--primary)", 
-             boxShadow: "0 10px 40px rgba(0,0,0,0.15)" 
-           }}>
-           <Plus className="w-6 h-6 text-white transition-transform" />
-         </button>
+          <button
+            onClick={() => setFabOpen(!fabOpen)}
+            className={`w-14 h-14 rounded-[22px] flex items-center justify-center transition-all shadow-2xl group border border-white/20 pointer-events-auto ${fabOpen ? "rotate-45" : ""}`}
+            style={{
+              background: fabOpen ? "var(--text-main)" : "var(--primary)",
+              boxShadow: "0 10px 40px rgba(0,0,0,0.15)"
+            }}>
+            <Plus className="w-6 h-6 text-white transition-transform" />
+          </button>
         )}
 
         <div className="flex flex-row items-center justify-end gap-3 pointer-events-auto">
-           {/* Nudge Bubble (Positioned to the LEFT) */}
-           <AnimatePresence>
-             {nudge && !open && (
-               <motion.div
-                 initial={{ opacity: 0, x: 20, scale: 0.9 }}
-                 animate={{ opacity: 1, x: 0, scale: 1 }}
-                 exit={{ opacity: 0, x: 20, scale: 0.9 }}
-                 className="glass-strong backdrop-blur-md px-5 py-3 rounded-[24px] rounded-br-[4px] shadow-2xl border relative flex-shrink-0"
-                 onClick={() => setOpen(true)}
-                 style={{ cursor: "pointer", background: "var(--primary-blush)", borderColor: "var(--border-glass-strong)" }}>
-                 <p className="text-[13px] font-bold" style={{ color: "var(--primary)" }}>{nudge}</p>
-                 <div className="absolute top-1/2 -translate-y-1/2 -right-2 w-3 h-3 border-r border-t rotate-45" style={{ background: "var(--primary-blush)", borderColor: "var(--border-glass-strong)" }} />
-               </motion.div>
-             )}
-           </AnimatePresence>
+          {/* Nudge Bubble (Positioned to the LEFT) */}
+          <AnimatePresence>
+            {nudge && !open && (
+              <motion.div
+                initial={{ opacity: 0, x: 20, scale: 0.9 }}
+                animate={{ opacity: 1, x: 0, scale: 1 }}
+                exit={{ opacity: 0, x: 20, scale: 0.9 }}
+                className="glass-strong backdrop-blur-md px-5 py-3 rounded-[24px] rounded-br-[4px] shadow-2xl border relative flex-shrink-0"
+                onClick={() => setOpen(true)}
+                style={{ cursor: "pointer", background: "var(--primary-blush)", borderColor: "var(--border-glass-strong)" }}>
+                <p className="text-[13px] font-bold" style={{ color: "var(--primary)" }}>{nudge}</p>
+                <div className="absolute top-1/2 -translate-y-1/2 -right-2 w-3 h-3 border-r border-t rotate-45" style={{ background: "var(--primary-blush)", borderColor: "var(--border-glass-strong)" }} />
+              </motion.div>
+            )}
+          </AnimatePresence>
 
-           <button
-             onClick={() => { setOpen(!open); setFabOpen(false); }}
-             className={`w-14 h-14 rounded-[22px] flex items-center justify-center transition-all hover:scale-110 active:scale-95 shadow-2xl border border-white/20 group relative ${open ? "bg-white rotate-90" : ""}`}
-             style={{
-               background: open ? "var(--bg-glass-strong)" : "var(--primary)",
-               boxShadow: "0 10px 40px rgba(0,0,0,0.15)"
-             }}>
-             {open ? (
-               <X className="w-6 h-6" style={{ color: "var(--primary)" }} />
-             ) : (
-               <>
-                 <MessageCircleHeart className="w-6 h-6 text-white" />
-                 <div className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-green-500 border-2 border-white" />
-               </>
-             )}
-           </button>
+          <button
+            onClick={() => { setOpen(!open); setFabOpen(false); }}
+            className={`w-14 h-14 rounded-[22px] flex items-center justify-center transition-all hover:scale-110 active:scale-95 shadow-2xl border border-white/20 group relative ${open ? "bg-white rotate-90" : ""}`}
+            style={{
+              background: open ? "var(--bg-glass-strong)" : "var(--primary)",
+              boxShadow: "0 10px 40px rgba(0,0,0,0.15)"
+            }}>
+            {open ? (
+              <X className="w-6 h-6" style={{ color: "var(--primary)" }} />
+            ) : (
+              <>
+                <MessageCircleHeart className="w-6 h-6 text-white" />
+                <div className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-green-500 border-2 border-white" />
+              </>
+            )}
+          </button>
         </div>
       </div>
 
@@ -344,11 +344,11 @@ export default function LoveChatbot() {
                 </div>
                 <div>
                   <h3 className="font-bold text-lg leading-tight" style={{ fontFamily: "var(--font-serif)", color: "var(--primary-deep)" }}>
-                    {settings.partnerName || "Dil"}
+                    {settings.partnerName || "Expedia"}
                   </h3>
                   <div className="flex items-center gap-1.5">
                     <div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
-                    <span className="text-[10px] uppercase tracking-widest font-black opacity-30" style={{ color: "var(--text-main)" }}>Always Loving</span>
+                    <span className="text-[10px] uppercase tracking-widest font-black opacity-30" style={{ color: "var(--text-main)" }}>Always with you</span>
                   </div>
                 </div>
               </div>

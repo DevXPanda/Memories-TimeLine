@@ -8,7 +8,6 @@ import {
    Search, MessageSquare, User, Loader2, Sparkles, Send,
    Smile, Check, CheckCheck, Ban, Shield, Lock, Info, ArrowLeft, Camera, Pencil
 } from "lucide-react";
-import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { ensureKeys, encryptMessage, decryptMessage } from "@/lib/crypto";
 
@@ -18,6 +17,7 @@ export default function ChatPage() {
    const setPublicKey = useMutation(api.auth.setPublicKey);
    const generateUploadUrl = useMutation(api.auth.generateUploadUrl);
    const updateProfileImage = useMutation(api.auth.updateProfileImage);
+   const updateLastSeen = useMutation(api.auth.updateLastSeen);
    const currentUser = useQuery(api.auth.getUser, { userId: userId ?? undefined });
    const fileInputRef = useRef<HTMLInputElement>(null);
    const [isUploading, setIsUploading] = useState(false);
@@ -26,7 +26,7 @@ export default function ChatPage() {
    const [searchTerm, setSearchTerm] = useState("");
    const [showChatOnMobile, setShowChatOnMobile] = useState(false);
    const [isSearchOpen, setIsSearchOpen] = useState(false);
-   
+
    const [isEditingChatName, setIsEditingChatName] = useState(false);
    const [tempChatName, setTempChatName] = useState("");
    const [chatNameError, setChatNameError] = useState("");
@@ -41,6 +41,16 @@ export default function ChatPage() {
          });
       }
    }, [userId, currentUser, setPublicKey]);
+
+   // Heartbeat for last seen
+   useEffect(() => {
+      if (!userId) return;
+      updateLastSeen({ userId }); // Initial ping
+      const interval = setInterval(() => {
+         updateLastSeen({ userId });
+      }, 60000); // 1 minute
+      return () => clearInterval(interval);
+   }, [userId, updateLastSeen]);
 
    if (!userId) return null;
 
@@ -80,19 +90,18 @@ export default function ChatPage() {
    };
 
    return (
-      <main className="h-screen bg-transparent flex flex-col overflow-hidden relative">
-         <Navbar />
-         <div className="flex-1 w-full max-w-6xl mx-auto px-0 md:px-6 flex flex-col justify-center overflow-hidden min-h-0 md:mb-4">
-            <div className="flex w-full h-full md:glass-strong md:rounded-[48px] md:border overflow-hidden md:shadow-2xl bg-white md:bg-transparent" style={{ borderColor: 'var(--border-glass-strong)' }}>
+      <main className="h-[calc(100dvh-64px)] bg-transparent flex flex-col overflow-hidden relative">
+         <div className="flex-1 w-full max-w-6xl mx-auto px-0 md:px-6 md:py-6 flex flex-col overflow-hidden min-h-0">
+            <div className="flex-1 flex w-full md:glass-strong border-0 md:border md:rounded-[48px] overflow-hidden md:shadow-2xl" style={{ borderColor: 'var(--border-glass-strong)', background: 'var(--bg-cream)' }}>
 
                {/* Sidebar */}
                <div className={`${showChatOnMobile ? 'hidden md:flex' : 'flex'} w-full md:w-[340px] flex flex-col border-r h-full shrink-0`} style={{ borderColor: 'var(--border-glass)', backgroundColor: 'rgba(var(--primary-rgb), 0.03)' }}>
 
                   {/* My Profile Section - Aligned with Chat Thread Header */}
-                  <div className="relative border-b bg-white/40 shrink-0 overflow-hidden" style={{ borderColor: 'var(--border-glass)', height: '100px' }}>
+                  <div className="relative border-b shrink-0 overflow-hidden" style={{ borderColor: 'var(--border-glass)', background: 'var(--bg-glass)', height: '100px' }}>
                      <AnimatePresence mode="wait">
                         {!isSearchOpen ? (
-                           <motion.div 
+                           <motion.div
                               key="profile"
                               initial={{ x: -20, opacity: 0 }}
                               animate={{ x: 0, opacity: 1 }}
@@ -101,7 +110,7 @@ export default function ChatPage() {
                            >
                               <div className="flex items-center gap-4 flex-1 min-w-0">
                                  <div className="relative group/avatar shrink-0">
-                                    <div className="w-12 h-12 md:w-14 md:h-14 rounded-full bg-white border shadow-md flex items-center justify-center overflow-hidden transition-transform group-hover/avatar:scale-105" style={{ borderColor: 'var(--border-glass-strong)' }}>
+                                    <div className="w-12 h-12 md:w-14 md:h-14 rounded-full border shadow-md flex items-center justify-center overflow-hidden transition-transform group-hover/avatar:scale-105" style={{ borderColor: 'var(--border-glass-strong)', background: 'var(--bg-glass-strong)' }}>
                                        {currentUser?.profileImage ? (
                                           <img src={currentUser.profileImage} alt="Profile" className="w-full h-full object-cover" />
                                        ) : (
@@ -125,7 +134,7 @@ export default function ChatPage() {
                                     <p className="text-[9px] font-black uppercase tracking-widest opacity-40 mb-0.5">My Identity</p>
                                     {isEditingChatName ? (
                                        <div className="space-y-1">
-                                          <input 
+                                          <input
                                              autoFocus
                                              value={tempChatName}
                                              onChange={(e) => { setTempChatName(e.target.value); setChatNameError(""); }}
@@ -153,13 +162,13 @@ export default function ChatPage() {
                                                    setIsEditingChatName(false);
                                                 }
                                              }}
-                                             className="w-full bg-white/50 border rounded px-2 py-0.5 font-bold text-sm outline-none focus:border-rose-400"
-                                             style={{ color: 'var(--primary-deep)' }}
+                                             className="w-full border rounded px-2 py-0.5 font-bold text-sm outline-none"
+                                             style={{ color: 'var(--primary-deep)', background: 'var(--bg-glass-strong)', borderColor: 'var(--border-glass-strong)' }}
                                           />
-                                          {chatNameError && <p className="text-[8px] text-rose-500 font-bold uppercase tracking-tight">{chatNameError}</p>}
+                                          {chatNameError && <p className="text-[8px] font-bold uppercase tracking-tight" style={{ color: 'var(--primary)' }}>{chatNameError}</p>}
                                        </div>
                                     ) : (
-                                       <div className="flex items-center gap-1.5 group/name cursor-pointer bg-white/0 hover:bg-white/30 px-1 rounded transition-colors" onClick={() => { setTempChatName(currentUser?.chatUsername || currentUser?.email.split('@')[0] || ""); setIsEditingChatName(true); }}>
+                                       <div className="flex items-center gap-1.5 group/name cursor-pointer rounded transition-colors hover:opacity-70" onClick={() => { setTempChatName(currentUser?.chatUsername || currentUser?.email.split('@')[0] || ""); setIsEditingChatName(true); }}>
                                           <h4 className="font-bold text-sm truncate" style={{ color: 'var(--primary-deep)' }}>
                                              {currentUser?.chatUsername || currentUser?.email.split('@')[0]}
                                           </h4>
@@ -169,7 +178,7 @@ export default function ChatPage() {
                                     <p className="text-[9px] font-medium opacity-30 truncate uppercase tracking-widest leading-none">{currentUser?.uniqueId}</p>
                                  </div>
                               </div>
-                              <button 
+                              <button
                                  onClick={() => setIsSearchOpen(true)}
                                  className="w-10 h-10 rounded-full hover:bg-rose-50/50 flex items-center justify-center transition-colors shrink-0"
                               >
@@ -177,12 +186,13 @@ export default function ChatPage() {
                               </button>
                            </motion.div>
                         ) : (
-                           <motion.div 
+                           <motion.div
                               key="search"
                               initial={{ x: -340, opacity: 0 }}
                               animate={{ x: 0, opacity: 1 }}
                               exit={{ x: -20, opacity: 0 }}
-                              className="absolute inset-0 p-4 md:p-6 bg-white/95 z-50 flex items-center gap-3 backdrop-blur-md"
+                              className="absolute inset-0 p-4 md:p-6 z-50 flex items-center gap-3 backdrop-blur-3xl"
+                              style={{ background: 'var(--bg-glass)' }}
                            >
                               <div className="relative flex-1">
                                  <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 opacity-20" />
@@ -191,11 +201,11 @@ export default function ChatPage() {
                                     value={searchTerm}
                                     onChange={(e) => setSearchTerm(e.target.value)}
                                     placeholder="Search Circle..."
-                                    className="w-full h-12 rounded-full pl-12 pr-4 text-[10px] uppercase font-black tracking-widest glass border outline-none focus:border-rose-400 transition-all"
-                                    style={{ color: 'var(--text-main)', borderColor: 'var(--border-glass)' }}
+                                    className="w-full h-12 rounded-full pl-12 pr-4 text-[10px] uppercase font-black tracking-widest glass border outline-none transition-all focus:shadow-md"
+                                    style={{ color: 'var(--text-main)', borderColor: 'var(--border-glass-strong)', background: 'var(--bg-glass-strong)' }}
                                  />
                               </div>
-                              <button 
+                              <button
                                  onClick={() => { setIsSearchOpen(false); setSearchTerm(""); }}
                                  className="w-10 h-10 rounded-full hover:bg-rose-50 flex items-center justify-center transition-colors text-[10px] font-bold uppercase tracking-tighter opacity-60"
                               >
@@ -221,30 +231,31 @@ export default function ChatPage() {
                            <p className="text-[10px] font-black uppercase tracking-widest italic">No connections found in this circle.</p>
                         </div>
                      ) : filteredFriends.map((f: any) => (
-                         <motion.button
-                            key={f._id}
-                            onClick={() => selectChat({ id: f._id, name: f.chatUsername || f.username || f.email.split('@')[0] })}
-                            whileHover={{ x: 4 }}
-                            whileTap={{ scale: 0.98 }}
-                            className={`w-full p-4 rounded-2xl border flex items-center gap-4 transition-all duration-300 ${activeChat?.id === f._id ? 'glass shadow-lg border-rose-300' : 'hover:bg-rose-50/10 border-transparent'}`}
-                         >
-                            <div className="relative">
-                               <div className="w-12 h-12 rounded-full bg-white flex items-center justify-center shadow-md border border-rose-50/50 overflow-hidden">
-                                  {f.profileImage ? (
-                                     <img src={f.profileImage} alt={f.email} className="w-full h-full object-cover" />
-                                  ) : (
-                                     <User className="w-6 h-6 opacity-10" />
-                                  )}
-                               </div>
-                               <div className={`absolute -top-1 -right-1 w-3.5 h-3.5 rounded-full border-[3px] border-white shadow-sm ${f.status === 'blocked_by_other' ? 'bg-rose-500' : 'bg-green-500 animate-pulse'}`} />
-                            </div>
-                            <div className="flex-1 text-left overflow-hidden">
-                               <h4 className="font-semibold text-sm truncate" style={{ color: 'var(--primary-deep)' }}>
-                                  {f.chatUsername || f.username || f.email.split('@')[0]}
-                               </h4>
-                               <p className="text-[7px] font-black opacity-30 uppercase tracking-[0.2em] font-mono truncate">{f.uniqueId}</p>
-                            </div>
-                         </motion.button>
+                        <motion.button
+                           key={f._id}
+                           onClick={() => selectChat({ id: f._id, name: f.chatUsername || f.username || f.email.split('@')[0] })}
+                           whileHover={{ x: 4 }}
+                           whileTap={{ scale: 0.98 }}
+                           className={`w-full p-4 rounded-2xl border flex items-center gap-4 transition-all duration-300 ${activeChat?.id === f._id ? 'glass shadow-lg' : 'border-transparent hover:glass'}`}
+                           style={{ borderColor: activeChat?.id === f._id ? 'var(--primary-soft)' : undefined }}
+                        >
+                           <div className="relative">
+                              <div className="w-12 h-12 rounded-full flex items-center justify-center shadow-md border overflow-hidden" style={{ borderColor: 'var(--border-glass-strong)', background: 'var(--bg-glass-strong)' }}>
+                                 {f.profileImage ? (
+                                    <img src={f.profileImage} alt={f.email} className="w-full h-full object-cover" />
+                                 ) : (
+                                    <User className="w-6 h-6 opacity-10" />
+                                 )}
+                              </div>
+                              <div className={`absolute -top-1 -right-1 w-3.5 h-3.5 rounded-full border-[3px] shadow-sm ${f.status === 'blocked_by_other' ? 'bg-rose-500' : 'animate-pulse'}`} style={{ borderColor: 'var(--bg-glass)', background: f.status !== 'blocked_by_other' ? 'var(--primary)' : undefined }} />
+                           </div>
+                           <div className="flex-1 text-left overflow-hidden">
+                              <h4 className="font-semibold text-sm truncate" style={{ color: 'var(--primary-deep)' }}>
+                                 {f.chatUsername || f.username || f.email.split('@')[0]}
+                              </h4>
+                              <p className="text-[7px] font-black opacity-30 uppercase tracking-[0.2em] font-mono truncate">{f.uniqueId}</p>
+                           </div>
+                        </motion.button>
                      ))}
                   </div>
 
@@ -255,7 +266,7 @@ export default function ChatPage() {
                </div>
 
                {/* Chat Thread Area */}
-               <div className={`${showChatOnMobile ? 'flex' : 'hidden md:flex'} flex-1 flex flex-col h-full relative overflow-hidden backdrop-blur-sm bg-white/40`}>
+               <div className={`${showChatOnMobile ? 'flex' : 'hidden md:flex'} flex-1 flex flex-col h-full relative overflow-hidden backdrop-blur-sm`} style={{ background: 'var(--bg-glass)' }}>
                   <AnimatePresence mode="wait">
                      {activeChat ? (
                         <ChatThread
@@ -286,7 +297,9 @@ export default function ChatPage() {
 
             </div>
          </div>
-         <Footer minimal />
+         <div className={showChatOnMobile ? "hidden md:block shrink-0" : "shrink-0"}>
+            <Footer minimal />
+         </div>
          <style jsx global>{`
             .custom-scrollbar::-webkit-scrollbar { width: 6px; }
             .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
@@ -370,40 +383,58 @@ function ChatThread({ userId, friendId, friendName, onBack }: any) {
       setTypingStatus({ userId, receiverId: friendId, isTyping: e.target.value.length > 0 });
    };
 
+   // Active status logic
+   let statusText = "offline";
+   let isOnline = false;
+   if (isTyping) {
+      statusText = "typing...";
+      isOnline = true;
+   } else if (targetUser?.lastSeen) {
+      const diffMs = Date.now() - targetUser.lastSeen;
+      if (diffMs < 180000) { // 3 minutes
+         statusText = "online";
+         isOnline = true;
+      } else {
+         const d = new Date(targetUser.lastSeen);
+         const isToday = new Date().toDateString() === d.toDateString();
+         const timeStr = d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+         statusText = `last seen ${isToday ? 'today' : d.toLocaleDateString([], { month: 'short', day: 'numeric' })} at ${timeStr}`;
+      }
+   }
+
    return (
       <div className="flex-1 flex flex-col h-full min-h-0 relative">
-         <div className="p-4 md:p-6 border-b flex items-center gap-2 md:gap-4 shrink-0 bg-white md:bg-transparent z-40" style={{ borderColor: 'var(--border-glass)', height: '100px' }}>
-            <button onClick={onBack} className="md:hidden p-2 -ml-2 rounded-full hover:bg-gray-100 transition-colors">
+         <div className="p-4 md:p-6 border-b flex items-center gap-2 md:gap-4 shrink-0 z-40" style={{ borderColor: 'var(--border-glass)', background: 'var(--bg-glass-strong)', height: '100px' }}>
+            <button onClick={onBack} className="md:hidden p-2 -ml-2 rounded-full transition-colors hover:bg-black/5 dark:hover:bg-white/5">
                <ArrowLeft className="h-6 w-6" />
             </button>
             <div className="flex items-center gap-3 md:gap-4">
-               <div className="w-10 h-10 md:w-12 md:h-12 rounded-full bg-white flex items-center justify-center shadow-md border relative overflow-hidden" style={{ borderColor: 'var(--border-glass-strong)' }}>
+               <div className="w-10 h-10 md:w-12 md:h-12 rounded-full flex items-center justify-center shadow-md border relative overflow-hidden" style={{ borderColor: 'var(--border-glass-strong)', background: 'var(--bg-glass-strong)' }}>
                   {targetUser?.profileImage ? (
                      <img src={targetUser.profileImage} alt={friendName} className="w-full h-full object-cover" />
                   ) : (
                      <User className="w-5 h-5 md:w-6 md:h-6 opacity-10" />
                   )}
-                  <div className={`absolute -top-1 -right-1 w-3 h-3 md:w-3.5 md:h-3.5 rounded-full border-[3px] border-white shadow-sm z-10 ${isTyping ? 'bg-green-500 animate-pulse' : 'bg-green-400'}`} />
+                  <div className={`absolute -top-1 -right-1 w-3 h-3 md:w-3.5 md:h-3.5 rounded-full border-[3px] shadow-sm z-10 ${isTyping ? 'animate-pulse' : ''}`} style={{ borderColor: 'var(--bg-glass)', background: 'var(--primary)' }} />
                </div>
                <div className="space-y-0.5">
                   <h4 className="text-lg md:text-xl font-bold tracking-tight" style={{ color: 'var(--primary-deep)', fontFamily: 'var(--font-serif)' }}>
                      {targetUser?.chatUsername || targetUser?.username || friendName}
                   </h4>
-                  <div className="flex items-center gap-1.5 leading-none">
-                     <Lock className={`w-2.5 h-2.5 ${isEncryptionReady ? 'text-emerald-500' : 'text-amber-500'}`} />
-                     <p className="text-[8px] md:text-[9px] font-black uppercase tracking-widest opacity-30">
-                        {isEncryptionReady ? "Strict End-to-End Encryption" : "Securing Connection..."}
+                  <div className="flex items-center leading-none mt-1">
+                     <p className={`text-[11px] md:text-xs font-medium tracking-wide lowercase transition-all ${isOnline ? 'text-emerald-500 font-bold' : 'opacity-60'}`}>
+                        {statusText}
                      </p>
                   </div>
                </div>
             </div>
          </div>
 
-         <div ref={scrollRef} className="flex-1 overflow-y-auto px-4 md:px-8 py-6 space-y-4 flex flex-col custom-scrollbar relative min-h-0 bg-[#e5ddd5]/30">
+         <div ref={scrollRef} className="flex-1 overflow-y-auto px-4 md:px-8 py-6 space-y-4 flex flex-col custom-scrollbar relative min-h-0">
             {isEncryptionReady && (
-               <div className="mx-auto flex items-center justify-center gap-2 mb-4 bg-amber-50/50 backdrop-blur-3xl px-4 py-2 rounded-xl border border-amber-100/50">
-                  <Shield className="w-3 h-3 text-amber-600" />
-                  <p className="text-[9px] font-black uppercase tracking-widest text-amber-700 opacity-60">Messages secured with Sanctuary E2EE</p>
+               <div className="mx-auto flex items-center justify-center gap-2 mb-4 px-4 py-2 rounded-xl border glass shadow-sm" style={{ borderColor: 'var(--border-glass-strong)', background: 'var(--bg-glass-strong)' }}>
+                  <Shield className="w-3 h-3 opacity-60" style={{ color: 'var(--primary)' }} />
+                  <p className="text-[9px] font-black uppercase tracking-widest opacity-60" style={{ color: 'var(--primary)' }}>Messages secured with Sanctuary E2EE</p>
                </div>
             )}
             {messages?.map((m: any) => {
@@ -411,12 +442,18 @@ function ChatThread({ userId, friendId, friendName, onBack }: any) {
                return (
                   <motion.div key={m._id} initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className={`flex ${isMe ? 'justify-end' : 'justify-start'} w-full`}>
                      <div className={`max-w-[85%] md:max-w-[70%] space-y-1 flex flex-col ${isMe ? 'items-end' : 'items-start'}`}>
-                        <div className={`px-4 py-2.5 md:px-6 md:py-4 rounded-[18px] text-sm md:text-base leading-relaxed shadow-sm border ${isMe ? 'btn-primary text-white border-white/20 rounded-tr-none' : 'glass-strong bg-white/90 text-[var(--text-main)] border-white/60 rounded-tl-none'}`}>
+                        <div
+                           className={`px-4 py-2.5 md:px-6 md:py-4 rounded-[18px] text-sm md:text-base leading-relaxed shadow-sm border ${isMe ? 'text-white rounded-tr-none' : 'glass-strong text-[var(--text-main)] rounded-tl-none'}`}
+                           style={{
+                              background: isMe ? 'var(--primary-gradient)' : 'var(--bg-glass-strong)',
+                              borderColor: isMe ? 'var(--primary)' : 'var(--border-glass-strong)'
+                           }}
+                        >
                            <MessageContent content={m.content} encryptedKey={isMe ? m.senderEncryptedKey : m.encryptedKey} iv={m.iv} userId={userId} />
                         </div>
                         <div className={`flex items-center gap-2 px-1 ${isMe ? 'flex-row' : 'flex-row-reverse'}`}>
                            <span className="text-[8px] md:text-[9px] font-black uppercase tracking-[0.2em] opacity-30">{new Date(m.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
-                           {isMe && (m.status === "read" ? <CheckCheck className="w-4 h-4 text-emerald-500" /> : <Check className="w-4 h-4 opacity-10" />)}
+                           {isMe && (m.status === "read" ? <CheckCheck className="w-4 h-4" style={{ color: 'var(--primary)' }} /> : <Check className="w-4 h-4 opacity-10" />)}
                         </div>
                      </div>
                   </motion.div>
@@ -434,11 +471,11 @@ function ChatThread({ userId, friendId, friendName, onBack }: any) {
             <div className="h-4 md:h-8 shrink-0 w-full" />
          </div>
 
-         <div className="shrink-0 p-3 md:p-6 lg:p-8 bg-white/80 md:bg-white/40 backdrop-blur-xl border-t" style={{ borderColor: 'var(--border-glass)' }}>
+         <div className="shrink-0 p-3 md:p-6 lg:p-8 backdrop-blur-3xl border-t z-40" style={{ borderColor: 'var(--border-glass)', background: 'var(--bg-glass-strong)' }}>
             {!isEncryptionReady && (
-               <div className="max-w-4xl mx-auto mb-4 p-3 rounded-2xl bg-amber-50 border border-amber-200 flex items-center gap-3 text-amber-800">
-                  <Info className="w-5 h-5 flex-shrink-0" />
-                  <p className="text-[10px] font-bold uppercase tracking-wider">Establishing secure connection. Messaging will be enabled once E2EE keys are verified. 🔒</p>
+               <div className="max-w-4xl mx-auto mb-4 p-3 rounded-2xl border flex items-center gap-3 glass" style={{ borderColor: 'var(--border-glass-strong)', color: 'var(--text-main)' }}>
+                  <Info className="w-5 h-5 flex-shrink-0 opacity-60" />
+                  <p className="text-[10px] font-bold uppercase tracking-wider opacity-60">Establishing secure connection. Messaging will be enabled once E2EE keys are verified. 🔒</p>
                </div>
             )}
             <form onSubmit={handleSend} className="max-w-4xl mx-auto flex gap-2 md:gap-4 relative items-center">
@@ -447,8 +484,8 @@ function ChatThread({ userId, friendId, friendName, onBack }: any) {
                   <input
                      autoFocus disabled={!isEncryptionReady || isSending} value={input} onChange={handleInputChange}
                      placeholder={isEncryptionReady ? "Type a secure message..." : "Establishing secure link... You can still type."}
-                     className="w-full h-11 md:h-14 pl-6 pr-12 rounded-full md:rounded-[24px] text-xs md:text-[10px] font-bold md:font-black md:uppercase tracking-[0.1em] md:tracking-[0.2em] bg-white md:glass border border-gray-200 md:border-rose-100 outline-none transition-all shadow-sm focus:shadow-md focus:border-rose-400"
-                     style={{ color: 'var(--text-main)' }}
+                     className="w-full h-11 md:h-14 pl-6 pr-12 rounded-full md:rounded-[24px] text-xs md:text-[10px] font-bold md:font-black md:uppercase tracking-[0.1em] md:tracking-[0.2em] glass border outline-none transition-all shadow-sm focus:shadow-md"
+                     style={{ color: 'var(--text-main)', borderColor: 'var(--border-glass-strong)', background: 'var(--bg-glass-strong)' }}
                   />
                   <button type="button" className="md:hidden absolute right-4 top-1/2 -translate-y-1/2 opacity-30"><Smile className="w-5 h-5" /></button>
                </div>

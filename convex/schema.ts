@@ -50,13 +50,14 @@ export default defineSchema({
     uniqueId: v.optional(v.string()), // e.g. U27032026
     username: v.optional(v.string()), // Global display name
     chatUsername: v.optional(v.string()), // Chat-specific display name
-    privatePin: v.optional(v.string()), // 4-6 digit chosen pin
+    privatePinHash: v.optional(v.string()), // 4-6 digit chosen pin
     isVerified: v.boolean(),
     otp: v.optional(v.string()),
     otpExpires: v.optional(v.number()),
     publicKey: v.optional(v.string()),
     profileImage: v.optional(v.string()),
     profileImageStorageId: v.optional(v.id("_storage")),
+    lastSeen: v.optional(v.number()),
   })
     .index("by_email", ["email"])
     .index("by_uniqueId", ["uniqueId"])

@@ -3,13 +3,13 @@ import { useState, useEffect } from "react";
 import { useQuery } from "convex/react";
 import { motion, AnimatePresence } from "framer-motion";
 import { api } from "@/convex/_generated/api";
-import Navbar from "@/components/Navbar";
 import MemoryCard from "@/components/MemoryCard";
 import UpcomingEvents from "@/components/UpcomingEvents";
 import HeroSection from "@/components/HeroSection";
 import FAQSection from "@/components/FAQSection";
 import Footer from "@/components/Footer";
 import AuthPage from "@/components/AuthPage";
+import TestimonialSlider from "@/components/TestimonialSlider";
 import { Heart, Star, Calendar, Filter, Sparkles, Clock, X, TrendingUp, Lock, ArrowRight } from "lucide-react";
 import Link from "next/link";
 import { useSearchParams, useRouter } from "next/navigation";
@@ -57,8 +57,6 @@ export default function Home() {
 
   return (
     <>
-      <Navbar />
-
       {userId ? (
         <>
           <HeroSection />
@@ -213,7 +211,7 @@ export default function Home() {
       ) : (
         /* Guest View - Centered Auth Portal */
         <>
-          <div className="min-h-[calc(100vh-64px)] flex flex-col items-center justify-center p-6 relative overflow-hidden bg-[#fffbf9]">
+          <div className="min-h-[calc(100vh-64px)] flex flex-col items-center justify-center p-6 relative overflow-hidden bg-transparent">
             {/* Cinematic Background Gradients */}
             <div className="absolute top-0 left-0 w-full h-[600px] pointer-events-none" 
               style={{ background: "linear-gradient(180deg, var(--primary-blush) 0%, rgba(255,255,255,0) 100%)" }} />
@@ -226,20 +224,20 @@ export default function Home() {
                   <div className="inline-flex items-center gap-2.5 px-4 py-1.5 rounded-full mb-8 glass shadow-xl border" style={{ borderColor: "var(--border-glass-strong)" }}>
                       <Sparkles className="w-4 h-4 text-amber-500 animate-pulse" />
                       <span className="text-[10px] sm:text-xs font-black uppercase tracking-[0.2em]" style={{ color: "var(--primary-deep)" }}>
-                        A Private Sanctuary for Your Moments
+                        Secure Chats & Private Memories
                       </span>
                   </div>
                   <h1 className="text-6xl sm:text-8xl font-bold mb-10 hero-title leading-[1.1] tracking-tight">
                       Preserve the <br /> <span className="text-gradient">Magic of Us.</span>
                   </h1>
                   <p className="text-lg sm:text-xl opacity-80 font-medium leading-relaxed mb-10 max-w-lg" style={{ color: "var(--text-muted)" }}>
-                      Join a beautiful, private space designed uniquely for your collective memories, photos, and secret whispers.
+                      Join a beautiful, private space designed uniquely for your collective memories, photos, and End-to-End Encrypted conversations.
                   </p>
                   
                   <div className="grid grid-cols-2 gap-8 pt-6 border-t border-rose-100 max-w-md">
                       <div>
-                        <p className="text-3xl font-black mb-1" style={{ color: "var(--primary)" }}>100%</p>
-                        <p className="text-[10px] font-black uppercase tracking-widest opacity-40">Private & Secure</p>
+                        <p className="text-3xl font-black mb-1" style={{ color: "var(--primary)" }}>E2EE</p>
+                        <p className="text-[10px] font-black uppercase tracking-widest opacity-40">Encrypted Chats</p>
                       </div>
                       <div>
                         <p className="text-3xl font-black mb-1" style={{ color: "var(--primary)" }}>Shared</p>
@@ -249,16 +247,17 @@ export default function Home() {
                 </motion.div>
 
                 <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.2 }} className="flex justify-center">
-                  <div className="w-full bg-white rounded-[48px] shadow-[0_40px_100px_rgba(0,0,0,0.1)] border p-4 relative" style={{ borderColor: "var(--border-glass-strong)" }}>
-                      <div className="absolute -top-6 -left-6 w-12 h-12 rounded-2xl glass flex items-center justify-center shadow-xl border" style={{ borderColor: "var(--border-glass-strong)", color: "var(--primary)" }}>
-                        <Lock className="w-6 h-6" />
-                      </div>
+                  <div className="w-full rounded-[48px] shadow-[0_40px_100px_rgba(0,0,0,0.1)] border p-4 relative" style={{ borderColor: "var(--border-glass-strong)", background: "var(--bg-cream)" }}>
                       <AuthPage onLogin={login} isModal={false} />
                   </div>
                 </motion.div>
             </div>
             
             <div className="mt-32 w-full max-w-6xl">
+                <TestimonialSlider />
+            </div>
+
+            <div className="mt-24 w-full max-w-6xl">
                 <FAQSection />
             </div>
           </div>

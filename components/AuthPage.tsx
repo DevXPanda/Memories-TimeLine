@@ -1,6 +1,6 @@
 "use client";
 import React, { useState } from "react";
-import { useMutation } from "convex/react";
+import { useMutation, useAction } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
 import { Heart, Mail, Lock, CheckCircle, ArrowRight, RefreshCw, Key, X } from "lucide-react";
@@ -25,10 +25,10 @@ export default function AuthPage({ onLogin, onClose, isModal = true }: AuthPageP
 
   const signup      = useMutation(api.auth.signup);
   const verifyOtp   = useMutation(api.auth.verifyOtp);
-  const setPinMut   = useMutation(api.auth.setPrivatePin);
-  const loginMut    = useMutation(api.auth.login);
+  const setPinMut   = useAction(api.auth.setPrivatePin);
+  const loginMut    = useAction(api.auth.login);
   const forgotPin   = useMutation(api.auth.forgotPin);
-  const resetPinMut = useMutation(api.auth.resetPin);
+  const resetPinMut = useAction(api.auth.resetPin);
 
   const sendEmail = async (targetEmail: string, code: string, type: "verify" | "reset") => {
     try {
@@ -141,7 +141,7 @@ export default function AuthPage({ onLogin, onClose, isModal = true }: AuthPageP
               <div className="relative">
                 <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-rose-300" />
                 <input required type="email" placeholder="your@email.com" value={email} onChange={e => setEmail(e.target.value)}
-                  className="input-rose h-12 pl-12 w-full rounded-2xl" />
+                  className="input-rose h-12 !pl-12 w-full rounded-2xl" />
               </div>
               <button disabled={loading} className="btn-primary w-full justify-center h-12 rounded-2xl shadow-xl font-bold">
                 {loading ? "Sending One-Time PIN..." : "Get Started ❤️"}
@@ -162,13 +162,13 @@ export default function AuthPage({ onLogin, onClose, isModal = true }: AuthPageP
               <div className="relative">
                 <CheckCircle className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-rose-300" />
                 <input required maxLength={6} placeholder="000000" value={otp} onChange={e => setOtp(e.target.value)}
-                  className="input-rose h-12 pl-12 w-full text-center tracking-[0.5em] font-black text-xl rounded-2xl" />
+                  className="input-rose h-12 text-center tracking-[0.5em] font-black text-xl rounded-2xl w-full" />
               </div>
               {mode === "forgot_otp" && (
                 <div className="relative">
                   <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-rose-300" />
                   <input required type="password" placeholder="New Secret PIN" value={pin} onChange={e => setPin(e.target.value)}
-                    className="input-rose h-12 pl-12 w-full rounded-2xl" />
+                    className="input-rose h-12 !pl-12 w-full rounded-2xl" />
                 </div>
               )}
               <button disabled={loading} className="btn-primary w-full justify-center h-12 rounded-2xl shadow-xl font-bold">
@@ -182,13 +182,13 @@ export default function AuthPage({ onLogin, onClose, isModal = true }: AuthPageP
       case "set_pin":
         return (
           <form onSubmit={handleSetPin} className="space-y-5">
-            <h2 className="text-3xl font-bold text-center mb-1" style={{ fontFamily: "var(--font-serif)", color: "var(--primary-deep)" }}>Secure Memories 🔒</h2>
+            <h2 className="text-3xl font-bold text-center mb-1" style={{ fontFamily: "var(--font-serif)", color: "var(--primary-deep)" }}>Secure Your Space 🔒</h2>
             <p className="text-center text-[10px] font-black uppercase tracking-widest opacity-40 mb-8" style={{ color: "var(--text-main)" }}>One last step...</p>
             <div className="space-y-4">
               <div className="relative">
                 <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-rose-300" />
-                <input required type="password" placeholder="Choose a Secury PIN" value={pin} onChange={e => setPin(e.target.value)}
-                  className="input-rose h-12 pl-12 w-full text-center text-2xl tracking-[0.3em] rounded-2xl" />
+                <input required type="password" placeholder="Choose a Secure PIN" value={pin} onChange={e => setPin(e.target.value)}
+                  className="input-rose h-12 !pl-12 w-full text-center text-2xl tracking-[0.3em] rounded-2xl" />
               </div>
               <button disabled={loading} className="btn-primary w-full justify-center h-12 rounded-2xl shadow-xl font-bold">
                 {loading ? "Securing..." : "Secure My Space ❤️"}
@@ -201,24 +201,28 @@ export default function AuthPage({ onLogin, onClose, isModal = true }: AuthPageP
         return (
           <form onSubmit={handleLogin} className="space-y-5">
             <h2 className="text-3xl font-bold text-center mb-1" style={{ fontFamily: "var(--font-serif)", color: "var(--primary-deep)" }}>Welcome back 🌹</h2>
-            <p className="text-center text-[10px] font-black uppercase tracking-widest opacity-40 mb-8" style={{ color: "var(--text-main)" }}>Your memories await</p>
+            <p className="text-center text-[10px] font-black uppercase tracking-widest opacity-40 mb-8" style={{ color: "var(--text-main)" }}>Your chats & memories await</p>
             <div className="space-y-4">
               <div className="relative">
                 <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-rose-300" />
-                <input readOnly value={email} className="input-rose h-12 pl-12 w-full opacity-60 pointer-events-none rounded-2xl" />
+                <input readOnly value={email} className="input-rose h-12 !pl-12 w-full opacity-60 pointer-events-none rounded-2xl" />
               </div>
               <div className="relative">
                 <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-rose-300" />
                 <input required autoFocus type="password" placeholder="Secret PIN" value={pin} onChange={e => setPin(e.target.value)}
-                  className="input-rose h-12 pl-12 w-full text-center text-2xl tracking-[0.3em] rounded-2xl" />
+                  className="input-rose h-12 !pl-12 w-full text-center text-2xl tracking-[0.3em] rounded-2xl" />
               </div>
               <button disabled={loading} className="btn-primary w-full justify-center h-12 rounded-2xl shadow-xl font-bold">
                 {loading ? "Unlocking..." : "Unlock Vault 🔓"}
               </button>
-              <div className="flex gap-4 justify-center mt-4 pt-4">
-                <button type="button" onClick={handleForgotTrigger} className="text-[10px] font-black uppercase tracking-widest text-rose-400 hover:underline">Forgot PIN?</button>
-                <div className="w-px h-4 bg-rose-100" />
-                <button type="button" onClick={() => setMode("email")} className="text-[10px] font-black uppercase tracking-widest text-rose-400 hover:underline">Not {email}?</button>
+              <div className="flex flex-col sm:flex-row items-center gap-3 sm:gap-4 justify-center mt-6 pt-6 border-t" style={{ borderColor: 'var(--border-glass)' }}>
+                <button type="button" onClick={handleForgotTrigger} className="text-xs font-semibold hover:underline transition-all" style={{ color: 'var(--primary)' }}>
+                  Forgot PIN?
+                </button>
+                <div className="hidden sm:block w-px h-3" style={{ background: 'var(--border-glass-strong)' }} />
+                <button type="button" onClick={() => setMode("email")} className="text-xs font-medium hover:underline transition-all max-w-[200px] truncate" style={{ color: 'var(--text-muted)' }}>
+                  Not {email}?
+                </button>
               </div>
             </div>
           </form>
@@ -231,8 +235,8 @@ export default function AuthPage({ onLogin, onClose, isModal = true }: AuthPageP
       initial={isModal ? { scale: 0.95, opacity: 0, y: 20 } : { opacity: 0, y: 10 }}
       animate={{ scale: 1, opacity: 1, y: 0 }}
       exit={isModal ? { scale: 0.95, opacity: 0, y: 20 } : { opacity: 0, y: 10 }}
-      className={`glass-strong w-full max-w-md rounded-[40px] p-10 relative bg-white ${isModal ? "shadow-[0_30px_100px_rgba(0,0,0,0.15)] border" : "shadow-none border-none"}`}
-      style={{ borderColor: "var(--border-glass-strong)" }}
+      className={`glass-strong w-full max-w-md rounded-[40px] p-10 relative ${isModal ? "shadow-[0_30px_100px_rgba(0,0,0,0.15)] border" : "shadow-none border-none"}`}
+      style={{ borderColor: "var(--border-glass-strong)", background: "var(--bg-glass-strong)" }}
       onClick={(e) => e.stopPropagation()}
     >
       {isModal && onClose && (

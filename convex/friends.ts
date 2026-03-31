@@ -106,21 +106,23 @@ export const blockFriend = mutation({
 });
 
 export const listFriends = query({
-  args: { userId: v.id("users") },
+  args: { userId: v.union(v.id("users"), v.null()) },
   handler: async (ctx, args) => {
+    if (!args.userId) return [];
+    const userId = args.userId;
     const friendships = await ctx.db
       .query("friendships")
       .filter((q) => 
         q.and(
           q.or(q.eq(q.field("status"), "accepted"), q.eq(q.field("status"), "blocked")),
-          q.or(q.eq(q.field("user1Id"), args.userId), q.eq(q.field("user2Id"), args.userId))
+          q.or(q.eq(q.field("user1Id"), userId), q.eq(q.field("user2Id"), userId))
         )
       )
       .collect();
 
     const friendsList = [];
     for (const f of friendships) {
-      const isUser1 = f.user1Id === args.userId;
+      const isUser1 = f.user1Id === userId;
       const friendId = isUser1 ? f.user2Id : f.user1Id;
       const friend = await ctx.db.get(friendId);
       if (friend) {
@@ -133,7 +135,7 @@ export const listFriends = query({
             myAccessToFriend: isUser1 ? (f.user2Access || ["all"]) : (f.user1Access || ["all"]),
             friendAccessToMe: isUser1 ? (f.user1Access || ["all"]) : (f.user2Access || ["all"])
           });
-        } else if (f.status === "blocked" && f.blockedById !== args.userId) {
+        } else if (f.status === "blocked" && f.blockedById !== userId) {
           // You were blocked by this person
           friendsList.push({
             _id: friend._id,
@@ -152,11 +154,13 @@ export const listFriends = query({
 });
 
 export const listPending = query({
-  args: { userId: v.id("users") },
+  args: { userId: v.union(v.id("users"), v.null()) },
   handler: async (ctx, args) => {
+    if (!args.userId) return [];
+    const userId = args.userId;
     const received = await ctx.db
       .query("friendships")
-      .withIndex("by_user2", (q) => q.eq("user2Id", args.userId))
+      .withIndex("by_user2", (q) => q.eq("user2Id", userId))
       .filter((q) => q.eq(q.field("status"), "pending"))
       .collect();
 
@@ -170,21 +174,23 @@ export const listPending = query({
 });
 
 export const listBlocked = query({
-  args: { userId: v.id("users") },
+  args: { userId: v.union(v.id("users"), v.null()) },
   handler: async (ctx, args) => {
+    if (!args.userId) return [];
+    const userId = args.userId;
     const blocked = await ctx.db
       .query("friendships")
       .filter((q) => 
         q.and(
           q.eq(q.field("status"), "blocked"),
-          q.eq(q.field("blockedById"), args.userId)
+          q.eq(q.field("blockedById"), userId)
         )
       )
       .collect();
 
     const blockedList = [];
     for (const b of blocked) {
-      const isUser1 = b.user1Id === args.userId;
+      const isUser1 = b.user1Id === userId;
       const friendId = isUser1 ? b.user2Id : b.user1Id;
       const friend = await ctx.db.get(friendId);
       if (friend) blockedList.push({ 
