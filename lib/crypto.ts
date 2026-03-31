@@ -24,7 +24,7 @@ async function openDB(): Promise<IDBDatabase> {
   });
 }
 
-async function getLocalKeyPair(userId: string): Promise<{ privateKey: CryptoKey, publicKey: string } | null> {
+async function getLocalKeyPair(userId: string): Promise<{ privateKeyStr: string, publicKey: string } | null> {
   const db = await openDB();
   return new Promise((resolve, reject) => {
     const transaction = db.transaction(STORE_NAME, "readonly");
@@ -35,12 +35,12 @@ async function getLocalKeyPair(userId: string): Promise<{ privateKey: CryptoKey,
   });
 }
 
-async function saveLocalKeyPair(userId: string, privateKey: CryptoKey, publicKey: string): Promise<void> {
+async function saveLocalKeyPair(userId: string, privateKeyStr: string, publicKey: string): Promise<void> {
   const db = await openDB();
   return new Promise((resolve, reject) => {
     const transaction = db.transaction(STORE_NAME, "readwrite");
     const store = transaction.objectStore(STORE_NAME);
-    const request = store.put({ privateKey, publicKey }, userId);
+    const request = store.put({ privateKeyStr, publicKey }, userId);
     request.onsuccess = () => resolve();
     request.onerror = () => reject(request.error);
   });
@@ -69,7 +69,11 @@ export async function ensureKeys(userId: string): Promise<string> {
       const exportedPublic = await window.crypto.subtle.exportKey("jwk", keyPair.publicKey);
       const publicKeyStr = JSON.stringify(exportedPublic);
       
-      await saveLocalKeyPair(userId, keyPair.privateKey, publicKeyStr);
+      const exportedPrivate = await window.crypto.subtle.exportKey("jwk", keyPair.privateKey);
+      const privateKeyStr = JSON.stringify(exportedPrivate);
+      
+      await saveLocalKeyPair(userId, privateKeyStr, publicKeyStr);
+      console.log("[E2EE] Generated new RSA key pair and stored persistently in IndexedDB.");
       return publicKeyStr;
     } finally {
       keyGenPromise = null;
@@ -159,7 +163,22 @@ export async function decryptMessage(
   const localData = await getLocalKeyPair(userId);
   if (!localData) throw new Error("Local secure key missing. Please refresh.");
 
-  const privateKey = localData.privateKey;
+  let privateKey: CryptoKey;
+  
+  if ((localData as any).privateKey) {
+    // Backward compatibility for users who generated keys before the JWK migration
+    privateKey = (localData as any).privateKey;
+  } else {
+    // New JSON stringified JWK format
+    const privateKeyJwk = JSON.parse(localData.privateKeyStr);
+    privateKey = await window.crypto.subtle.importKey(
+      "jwk",
+      privateKeyJwk,
+      { name: "RSA-OAEP", hash: "SHA-256" },
+      true,
+      ["decrypt"]
+    );
+  }
 
   try {
     // 1. Decrypt AES key with RSA private key
